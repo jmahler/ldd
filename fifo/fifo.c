@@ -35,21 +35,33 @@ static int __init fifo_init(void)
 
 	// allocate a device major number
 	if (alloc_chrdev_region(&fifo_dev_number, 0, 1, DEVICE_NAME) < 0) {
-		printk(KERN_ERR "Unable to allocate device major number");
+		printk(KERN_ERR "Unable to allocate device major number\n");
 
 		return -1;  // ERROR
 	}
-	printk(KERN_INFO "%s: alloc_chrdev_region() (MAJOR, MINOR) -> (%d, %d)", DEVICE_NAME, MAJOR(fifo_dev_number), MINOR(fifo_dev_number));
+	printk(KERN_INFO "%s: alloc_chrdev_region() (MAJOR, MINOR) -> (%d, %d)\n", DEVICE_NAME, MAJOR(fifo_dev_number), MINOR(fifo_dev_number));
 
-	printk(KERN_INFO "%s: class_create()", DEVICE_NAME);
+	printk(KERN_INFO "%s: class_create()\n", DEVICE_NAME);
 	// create a sysfs entry /sys/class/fifo
 	fifo_class = class_create(THIS_MODULE, DEVICE_NAME);
+	if (IS_ERR(fifo_class)) {
+		printk(KERN_ERR "Unable to create fifo class memory\n");
 
-	printk(KERN_INFO "%s: kmalloc()", DEVICE_NAME);
+		unregister_chrdev_region(fifo_dev_number, 0);
+
+		return PTR_ERR(fifo_class);
+	}
+	printk(KERN_INFO "fifo_class: %p\n", fifo_class);
+
+	printk(KERN_INFO "%s: kmalloc()\n", DEVICE_NAME);
 	// allocate memory
 	fifo_devp = kmalloc(sizeof(struct fifo_dev), GFP_KERNEL);
 	if (!fifo_devp) {
-		printk(KERN_ERR "Unable to kmalloc memory");
+		printk(KERN_ERR "Unable to kmalloc memory\n");
+
+		unregister_chrdev_region(fifo_dev_number, 0);
+		class_destroy(fifo_class);
+
 		return -ENOMEM;
 	}
 
@@ -60,30 +72,37 @@ static int __init fifo_init(void)
 	// add our cdev to the kernel
 	ret = cdev_add(&fifo_devp->cdev, fifo_dev_number, 1);
 	if (ret) {
-		printk("Unable to add cdev");
+		printk(KERN_ERR "Unable to add cdev\n");
+
+		unregister_chrdev_region(fifo_dev_number, 0);
+		class_destroy(fifo_class);
+		kfree(fifo_devp);
+
 		return ret;
 	}
 
-	/*
-	// notify udev, so it will create the devices
-	device_create(fifo_class, NULL, MKDEV(MAJOR(fifo_dev_number), 0),
-			"fifo%d", 0);
-	*/
+	printk(KERN_INFO "pre-device create\n");
 
-	printk(KERN_INFO "%s loaded", DEVICE_NAME);
+	// notify udev, so it will create the devices
+	device_create(fifo_class, NULL, fifo_dev_number, NULL, "fifo0");
+
+	printk(KERN_INFO "%s loaded\n", DEVICE_NAME);
 
 	return 0;  // OK
 }
 
 static void __exit fifo_exit(void)
 {
-	printk(KERN_INFO "%s fifo_exit()", DEVICE_NAME);
+	printk(KERN_INFO "%s fifo_exit()\n", DEVICE_NAME);
 
-
+	// release the device major number
 	unregister_chrdev_region(fifo_dev_number, 0);
 
-	// TODO device_destroy
+	// tell udev to destroy the device
+	//device_destroy(fifo_class, MKDEV(MAJOR(fifo_dev_number), 0));
+	device_destroy(fifo_class, fifo_dev_number);
 
+	// remove our cdev from the kernel
 	cdev_del(&fifo_devp->cdev);
 
 	// free memory
