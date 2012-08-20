@@ -1,0 +1,156 @@
+#+TITLE: Linux Device Drivers
+
+kernel 3.2
+
+
+* init, exit
+
+Basic init and exit operations
+
+static void __init name_init();
+
+static void __exit name_exit(void);
+
+module_init(naem_init);
+module_exit(name_exit);
+
+
+Things created during init() must be released during exit().
+The following are some of the pairs.
+
+// get a device major number
+alloc_chrdev_region();
+unregister_chrdev_region();
+
+// allocate our device specific structure
+kmalloc()
+kfree();
+
+// setup the cdev struc file_operations
+cdev_init();
+// add our cdev to the kernel
+cdev_add();
+cdev_del();
+
+// notify udev; to create the devices
+device_create();
+device_destroy();
+
+// create sysfs entries
+class_create();
+class_destroy();
+
+* PCI
+
+struct pci_device_id
+\cite[Pg. 142]{ELDD}
+
+* interrupts
+
+Normally irq requested when device open and freed
+when closed.  Not during module load and remove.
+
+request_irq();
+free_irq(int irq, void *dev_id);
+
+enable_irq(IRQ_NUMBER);
+disable_irq(IRQ_NUMBER);
+disable_irq_nosync(IRQ_NUMBER);
+
+Shared interrupts, IRQ_HANDLED, IRQ_NONE (irqreturn_t).
+
+PCI express should use MSI interrupts.
+
+** bottom half scheduling
+
+These schedule processing of the fat bottom half when
+called from the skinny top half (interrupt handler).
+
+*** Softirqs
+
+Softirqs are only used for very special situations \cite[Pg. 131]{ELDD}
+
+*** Tasklets
+
+Cannot go to sleep \cite[Pg. 134]{ELDD}
+
+(inside __init)
+tasklet_init(&dev_struct->tsklt, fn, dev);
+
+(inside _interrupt)
+tasklet_schedule(&dev_struct->tsklt);
+
+\cite[Pg. 133]{ELDD}
+tasklet_enable();
+tasklet_disable();
+tasklet_disable_nosync();
+
+May become obsolete in the future.
+Functions may need to be converted to Softirqs
+or Work queus.  \cite[Pg. 135]{ELDD}
+
+*** Work queues
+
+Can go to sleep.
+
+** spurrious interrupts
+
+\cite[Pg. 132]{ELDD}
+
+** TODO how to switch to polled mode?
+
+* spinlocks, mutexes, semaphores
+
+spin_lock(&lock);
+spin_unlock(&lock);
+
+Cannot use copy_to_user() or copy_from_user() because
+they may sleep.
+
+* managing drivers (udev)
+
+insmod, modprobe
+rmmod
+
+procfs - kernel internals
+
+Sysfs - kernel device model
+/sys
+
+$ udevinfo -a -p /sys/block/sr0
+
+$ udevmonitor --env
+
+/etc/udev/rules.d/
+
+* char drivers
+
+A character driver provides sequential (not random) access to a device.
+
+Char drivers will have a 'c' at the begining of the perimissions
+when listed in /dev
+
+init()
+open()
+read()
+ioctl()
+llseek()
+write()
+
+a per device structure
+struct cdev  (usually in the per device structure)
+struct file_operations
+
+* misc drivers
+
+misc_register()
+
+* optimizations
+
+likely()
+unlikely()
+
+Suggestions to the compiler as to how likely a
+predicate is.
+
+if (likely(1))
