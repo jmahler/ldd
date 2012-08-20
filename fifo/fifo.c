@@ -40,9 +40,7 @@ static int __init fifo_init(void)
 
 		return -1;  // ERROR
 	}
-	printk(KERN_INFO "%s: alloc_chrdev_region() (MAJOR, MINOR) -> (%d, %d)\n", DEVICE_NAME, MAJOR(fifo_dev_number), MINOR(fifo_dev_number));
 
-	printk(KERN_INFO "%s: class_create()\n", DEVICE_NAME);
 	// create a sysfs entry /sys/class/fifo
 	fifo_class = class_create(THIS_MODULE, DEVICE_NAME);
 	if (IS_ERR(fifo_class)) {
@@ -52,9 +50,7 @@ static int __init fifo_init(void)
 
 		return PTR_ERR(fifo_class);
 	}
-	printk(KERN_INFO "fifo_class: %p\n", fifo_class);
 
-	printk(KERN_INFO "%s: kmalloc()\n", DEVICE_NAME);
 	// allocate memory
 	fifo_devp = kmalloc(sizeof(struct fifo_dev), GFP_KERNEL);
 	if (!fifo_devp) {
@@ -82,12 +78,8 @@ static int __init fifo_init(void)
 		return ret;
 	}
 
-	printk(KERN_INFO "pre-device create\n");
-
 	// notify udev, so it will create the devices
 	device_create(fifo_class, NULL, fifo_dev_number, NULL, "fifo0");
-
-	printk(KERN_INFO "%s loaded\n", DEVICE_NAME);
 
 	return 0;  // OK
 }
