@@ -29,6 +29,7 @@ static struct file_operations fifo_fops = {
 //	.ioctl    = fifo_ioctl,
 };
 
+// {{{ fifo_init()
 static int __init fifo_init(void)
 {
 	int ret;
@@ -90,7 +91,9 @@ static int __init fifo_init(void)
 
 	return 0;  // OK
 }
+// }}}
 
+// {{{ fifo_exit()
 static void __exit fifo_exit(void)
 {
 	printk(KERN_INFO "%s fifo_exit()\n", DEVICE_NAME);
@@ -111,6 +114,7 @@ static void __exit fifo_exit(void)
 	// remove the sysfs entry /sys/class/fifo
 	class_destroy(fifo_class);
 }
+// }}}
 
 module_init(fifo_init);
 module_exit(fifo_exit);
