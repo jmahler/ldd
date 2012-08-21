@@ -11,6 +11,20 @@ The data is read and written using a device.
 And it has an upper limit after which data that is
 written will be discarded.
 
+BUGS
+----
+
+It currently has a bug where copy_from_user in fifo_write
+returns a non-zero number indicating that it has not written
+all the data.  Then soon after the a kernel oops occurs and
+the computer locks up.
+
+copy_from_user can return a non-zero value if it detects and
+invalid memory address.  When the bug occurs it is always
+part way through a buffer.
+
+Somehow a pointer or something else is becoming invalid.
+
 USAGE
 -----
 
