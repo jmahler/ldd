@@ -6,16 +6,17 @@
 #include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/slab.h>
+#include <asm/uaccess.h>
 
 MODULE_LICENSE("GPL");
 
 #define DEVICE_NAME "fifo"
-#define BUF_SIZE 8192 
+#define FIFO_SIZE 8192 
 
 // per device structure
 struct fifo_dev {
 	struct cdev cdev;
-	char buf[BUF_SIZE];
+	char *buf;
 	int buf_rd_pos;  // read position in buffer
 	int buf_wr_pos;  // write position in buffer
 	bool buf_empty;  // true if buffer is empty
@@ -50,82 +51,148 @@ fifo_release(struct inode *inode, struct file *file)
 
 // {{{ fifo_read
 ssize_t
-fifo_read(struct file *file, char *buf, size_t count, loff_t *ppos)
+fifo_read(struct file *file, char __user *buf, size_t count, loff_t *ppos)
 {
+	// ubuf - user space buffer
+
 	struct fifo_dev *fifo_devp = file->private_data;
 
-	int n;
 	int *buf_rd_pos = &fifo_devp->buf_rd_pos;
 	int buf_wr_pos = fifo_devp->buf_wr_pos;
+	int num_left;
+	int max_count;  // result count, might be less than 'count'
+	int n;
+	char *kbuf = fifo_devp->buf;
 
-	n = 0;
-	while (1) {
-		// if reached number of requested value
-		if (n >= count)
-			break;
-
+	// 0 1 2 3 4 5 6 7
+	// - | - - - - | -  = 5
+	//  rd        wr
+	//
+	// - | - - - - | -  = 3
+	//  wr        rd
+	//
+	// - | - - - - - -  = 0 if empty, 8 if not empty
+	//  wr
+	//  rd
+	//
+	// Calculate the number left to read which is
+	// the difference between the write position and the
+	// read position.  And it may have overflowed relative
+	// to the FIFO_SIZE.
+	if (buf_wr_pos > *buf_rd_pos) {
+		num_left = buf_wr_pos - *buf_rd_pos;
+	} else if (buf_wr_pos == *buf_rd_pos) {
 		if (fifo_devp->buf_empty)
-			break;
+			num_left = 0;
+		else
+			num_left = FIFO_SIZE;
+	} else {
+		num_left = buf_wr_pos + (FIFO_SIZE - *buf_rd_pos); 
+	}
+	max_count = (count > num_left) ? num_left : count;
 
-		// read the value
-		*buf = fifo_devp->buf[*buf_rd_pos];
-		buf++;
-		n++;
+//	printk("fifo_read PRE:\n");
+//	printk("  num_left = %u\n", num_left);
+//	printk("  max_count = %u\n", max_count);
+//	printk("  buf_rd_pos = %u\n", *buf_rd_pos);
+//	printk("  buf_wr_pos = %u\n", buf_wr_pos);
+//	printk("  empty = %u\n", fifo_devp->buf_empty);
 
-		// next position, check for overflow
-		(*buf_rd_pos)++;
-		if (*buf_rd_pos >= BUF_SIZE) {
-			*buf_rd_pos = 0;
-		}
+	// move the pointer start of the kernel buffer for copy_to_user()
+	kbuf += *buf_rd_pos;
 
-		// if empty
-		if (*buf_rd_pos == buf_wr_pos) {
+	n = copy_to_user((void __user *) buf, kbuf, max_count);
+
+	// on success
+	if (0 == n) {
+		// update read position, account for overflow
+		*buf_rd_pos += max_count;
+		if (*buf_rd_pos >= FIFO_SIZE)
+			*buf_rd_pos = *buf_rd_pos - FIFO_SIZE;
+
+		if (max_count == num_left)
 			fifo_devp->buf_empty = true;
-			break;
-		}
+
+//	printk("fifo_read POST:\n");
+//	printk("  buf_rd_pos = %u\n", *buf_rd_pos);
+//	printk("  buf_wr_pos = %u\n", buf_wr_pos);
+//	printk("  empty = %u\n", fifo_devp->buf_empty);
+
+		return max_count;  // OK
 	}
 
-	return n;
+	return 0;  // ERROR - nothing transferred
 }
 // }}}
 
 // {{{ fifo_write
 ssize_t
-fifo_write(struct file *file, const char *buf, size_t count, loff_t *ppos)
+fifo_write(struct file *file, const char __user *buf, size_t count, loff_t *ppos)
 {
 	struct fifo_dev *fifo_devp = file->private_data;
+
 	int buf_rd_pos = fifo_devp->buf_rd_pos;
 	int *buf_wr_pos = &fifo_devp->buf_wr_pos;
-	bool *buf_empty = &fifo_devp->buf_empty;
+	int num_left;
+	int max_count;  // result count, might be less than 'count'
 	int n;
+	char *kbuf = fifo_devp->buf;
 
-	n = 0;
-	while (1) {
-
-		// if reached number of requested value
-		if (n >= count)
-			break;
-
-		// if full
-		if (buf_rd_pos == *buf_wr_pos && ! *buf_empty) {
-			break;
-		}
-
-		// write the value
-		fifo_devp->buf[*buf_wr_pos] = *buf;
-		buf++;
-		n++;
-		if (*buf_empty)
-			*buf_empty = false;
-
-		// next position, check for overflow
-		(*buf_wr_pos)++;
-		if (*buf_wr_pos >= BUF_SIZE) {
-			*buf_wr_pos = 0;
-		}
+	// 0 1 2 3 4 5 6 7
+	// - | - - - - | -  = 3
+	//  rd        wr
+	//
+	// - | - - - - | -  = 5
+	//  wr        rd
+	//
+	// - | - - - - - -  = 8 if empty, 0 if not empty
+	//  wr
+	//  rd
+	//
+	// Calculate the number left to write.
+	// Difference between the write position and the read position.
+	// And the numbers may have overflowed.
+	if (buf_rd_pos > *buf_wr_pos) {
+		num_left = buf_rd_pos - *buf_wr_pos;
+	} else if (buf_rd_pos == *buf_wr_pos) {
+		if (fifo_devp->buf_empty)
+			num_left = FIFO_SIZE;
+		else
+			num_left = 0;
+	} else {
+		num_left = buf_rd_pos + (FIFO_SIZE - *buf_wr_pos); 
 	}
 
-	return n;
+	max_count = (count > num_left) ? num_left : count;
+
+//	printk("fifo_write PRE:\n");
+//	printk("  num_left = %u\n", num_left);
+//	printk("  max_count = %u\n", max_count);
+//	printk("  buf_rd_pos = %u\n", buf_rd_pos);
+//	printk("  buf_wr_pos = %u\n", *buf_wr_pos);
+//	printk("  empty = %u\n", fifo_devp->buf_empty);
+
+	kbuf += *buf_wr_pos;
+
+	n = copy_from_user(kbuf, (char __user *) buf, max_count);
+
+	if (0 == n) {
+		*buf_wr_pos += max_count;
+		if (*buf_wr_pos >= FIFO_SIZE)
+			*buf_wr_pos = *buf_wr_pos - FIFO_SIZE;
+
+		if (max_count > 0)
+			fifo_devp->buf_empty = false;
+
+//	printk("fifo_write POST:\n");
+//	printk("  buf_rd_pos = %u\n", buf_rd_pos);
+//	printk("  buf_wr_pos = %u\n", *buf_wr_pos);
+//	printk("  empty = %u\n", fifo_devp->buf_empty);
+
+		return max_count;  // OK
+	}
+
+	return 0;  // ERROR - nothing transferred
 }
 // }}}
 
@@ -167,6 +234,18 @@ static int __init fifo_init(void)
 
 		unregister_chrdev_region(fifo_dev_number, 0);
 		class_destroy(fifo_class);
+
+		return -ENOMEM;
+	}
+
+	// allocate the buffer
+	fifo_devp->buf = kmalloc(FIFO_SIZE, GFP_KERNEL);
+	if (!fifo_devp->buf) {
+		printk(KERN_ERR "Unable to kmalloc memory for buffer\n");
+
+		unregister_chrdev_region(fifo_dev_number, 0);
+		class_destroy(fifo_class);
+		kfree(fifo_devp);
 
 		return -ENOMEM;
 	}
@@ -213,6 +292,7 @@ static void __exit fifo_exit(void)
 	cdev_del(&fifo_devp->cdev);
 
 	// free memory
+	kfree(fifo_devp->buf);
 	kfree(fifo_devp);
 
 	// remove the sysfs entry /sys/class/fifo

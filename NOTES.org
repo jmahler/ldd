@@ -141,6 +141,22 @@ a per device structure
 struct cdev  (usually in the per device structure)
 struct file_operations
 
+** data transfer, kernel space, user space
+
+(read(), write())
+Buffers in user space cannot be accessed directly from
+kernel space and vice versa.  To copy data copy_from_user()
+and copy_to_user() must be used.
+
+For single variables instead of blocks use:
+get_user(), put_user()
+
+Architecture independent functions for copying data
+in[b|w|l|sb|sl]()
+out[b|w|l|sb|sl]()
+
+\cite[Pg. 161]{ELDD}
+
 * misc drivers
 
 misc_register()

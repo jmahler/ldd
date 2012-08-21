@@ -4,17 +4,45 @@
 #include <inttypes.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
 #include <sys/types.h>
 
+#define FIFO_SIZE 8192
+
+// {{{ _read/_write utils
+void _read(const int devfd, const int size, char *check_buf)
+{
+	int i;
+	char *buf;
+	char *buf_start;
+
+	buf = malloc(size);
+	buf_start = buf;
+
+	read(devfd, buf, size);
+
+	for (i = 0; i < size; i++, check_buf++, buf++) {
+		if (*check_buf != *buf)
+			printf("_read: not equal [%d]: %d != %d\n",
+					i, *check_buf, *buf);
+	}
+
+	free(buf_start);
+}
+
+void _write(const int devfd, const int size, char *set_buf)
+{
+	write(devfd, set_buf, size);
+}
+// }}}
+
 int main(int argc, char **argv) {
 
 	char dev_file[] = "/dev/fifo0";
-	char buf[10];
 	int devfd;
 	int i;
-	int n;
 
 	if ( (devfd = open(dev_file, O_RDWR)) < 0) {
 		printf("Unable to open device '%s': %s\n",
@@ -23,57 +51,43 @@ int main(int argc, char **argv) {
 		return 1;  // ERROR
 	}
 
-	// the fifo size is 3 
-
-	// {{{ complete fill and empty
-
-	// {{{ one by one
-	for (i = 0; i < 5; i++) {
-		buf[0] = i;
-		write(devfd, buf, 1);
+	// {{{ write, write, read, write
+	{
+	int sz = 4005;
+	char *check_buf1 = malloc(sz);
+	char *cptr = check_buf1;
+	for (i = 0; i < sz; i++, cptr++) {
+		*cptr = i;	
 	}
 
-	for (i = 0; i < 3; i++) {
-		read(devfd, buf, 1);
-		if (buf[0] != i) {
-			printf("incorrect value read at offset %d\n", i);
-			return 1;  // ERROR
-		}
-	}
-	// }}}
+	_write(devfd, sz, check_buf1);
+	_write(devfd, sz, check_buf1);
+	_read(devfd, sz, check_buf1);
+	_write(devfd, sz, check_buf1);
+	_read(devfd, sz, check_buf1);
+	_read(devfd, sz, check_buf1);
 
-	// {{{ whole write
-
-	buf[0] = 5;
-	buf[1] = 6;
-	buf[2] = 7;
-
-	n = write(devfd, buf, 3);
-	if (n != 3) {
-		printf("should have wrote %d values, but it wrote %d\n", 3, n);
-		return 1;
-	}
-
-	buf[0] = 0;
-	buf[1] = 0;
-	buf[2] = 0;
-
-	n = read(devfd, buf, 3);
-	if (n != 3) {
-		printf("should have read %d values, but it wrote %d\n", 3, n);
-		return 1;
-	}
-
-	for (i = 0; i < 3; i++) {
-
-		if (buf[i] != i + 5) {
-			printf("whole write, incorrect value read at offset %d\n", i);
-			printf("  got %d was expecting %d\n", buf[i], i + 5);
-			return 1;  // ERROR
-		}
+	free(check_buf1);
 	}
 	// }}}
 
+	// {{{ write overflow
+
+	{
+	int sz = FIFO_SIZE;
+	char *check_buf1 = malloc(sz);
+	char *cptr = check_buf1;
+	for (i = 0; i < sz; i++, cptr++) {
+		*cptr = i;	
+	}
+
+	_write(devfd, sz, check_buf1);  // should be full
+	_write(devfd, sz, check_buf1);  // all will be lost
+	_read(devfd, sz, check_buf1);
+	// TODO - should be empty
+
+	free(check_buf1);
+	}
 	// }}}
 
 	printf("OK\n");

@@ -8,10 +8,13 @@
 #include <sys/ioctl.h>
 #include <sys/types.h>
 
+#define FIFO_SIZE 8192
+#define N 4000
+
 int main(int argc, char **argv) {
 
 	char dev_file[] = "/dev/fifo0";
-	char buf[10];
+	char buf[FIFO_SIZE];
 	int devfd;
 	int i;
 
@@ -22,15 +25,11 @@ int main(int argc, char **argv) {
 		return 1;  // ERROR
 	}
 
-	buf[0] = 5;
-	buf[1] = 6;
-	buf[2] = 7;
-	write(devfd, buf, 3);
-
-	for (i = 0; i < 3; i++) {
-		printf("write: %d\n", buf[i]);
+	for (i = 0; i < N; i++) {
+		buf[i] = i + 5;
 	}
 
+	write(devfd, buf, N);
 
 	/*
 	buf[0] = 5;
