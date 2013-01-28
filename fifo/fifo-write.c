@@ -17,6 +17,7 @@ int main(int argc, char **argv) {
 	char buf[FIFO_SIZE];
 	int devfd;
 	int i;
+	int n;
 
 	if ( (devfd = open(dev_file, O_RDWR)) < 0) {
 		printf("Unable to open device '%s': %s\n",
@@ -29,21 +30,10 @@ int main(int argc, char **argv) {
 		buf[i] = i + 5;
 	}
 
-	write(devfd, buf, N);
-
-	/*
-	buf[0] = 5;
-	write(devfd, buf, 1);
-	printf("write: %d\n", buf[0]);
-
-	buf[0] = 6;
-	write(devfd, buf, 1);
-	printf("write: %d\n", buf[0]);
-
-	buf[0] = 7;
-	write(devfd, buf, 1);
-	printf("write: %d\n", buf[0]);
-	*/
+	n = write(devfd, buf, N);
+	if (n != N) {
+		printf("short write, %d values out of %d\n", n, N);
+	}
 
 	return 0;  // OK
 }

@@ -51,13 +51,13 @@ int main(int argc, char **argv) {
 
 		n = write(devfd, buf, FIFO_SIZE);
 		if (n != FIFO_SIZE) {
-			printf("should have wrote %d values, but it wrote %d\n", 3, n);
+			printf("[%d]: should have wrote %d values, but it wrote %d\n", i, FIFO_SIZE, n);
 			return 1;
 		}
 
 		n = read(devfd, buf, FIFO_SIZE);
 		if (n != FIFO_SIZE) {
-			printf("should have read %d values, but it wrote %d\n", 3, n);
+			printf("[%d]: should have read %d values, but it wrote %d\n", i, FIFO_SIZE, n);
 			return 1;
 		}
 	}

@@ -3,15 +3,52 @@
 kernel 3.2
 
 
+* time, jiffies, HZ
+
+\cite[Pg. 64]{Essential Linux Device Drivers}
+
+HZ [Jiffies/s]
+
+unsigned long timeout = jiffies + (3*HZ);  // 3 seconds
+time_after(jiffies, timeout);
+
+time_before();
+time_before_eq();
+time_after_eq();
+
+
+// sleep wait instead of busy wait
+schedule_timeout(timeout);
+
+#include <linux/timer.h>
+
+TSC - Time Stamp Counter
+low_tsc_ticks
+high_tsc_ticks
+
+** Short Delays (sub jiffy)
+
+Short delays must busy wait.
+
+mdelay(), udelay(), ndelay()
+
+** Real Time Clock
+
+Tracks absoloute time, nonvolatile memory.
+
 * init, exit
 
 Basic init and exit operations
 
 static void __init name_init();
 
+__init - tells kernel to drop the function after initialization
+__initdata - tells kernel to drop the data after initialization
+\cite[Pg. 51]{LDD}
+
 static void __exit name_exit(void);
 
-module_init(naem_init);
+module_init(name_init);
 module_exit(name_exit);
 
 
@@ -20,6 +57,8 @@ The following are some of the pairs.
 
 // get a device major number
 alloc_chrdev_region();
+register_chrdev_region();
+--
 unregister_chrdev_region();
 
 // allocate our device specific structure
@@ -39,6 +78,23 @@ device_destroy();
 // create sysfs entries
 class_create();
 class_destroy();
+
+pci_alloc_consistent()
+pci_free_consistent()
+
+pci_enable_device()
+pci_disable_device()
+
+* current process
+
+The kernel can get information about the current process
+that is accessing the driver \cite[Pg. 42]{LDD}
+
+#include <asm/current.h>
+#include <linux/sched.h>
+
+printk(KERN_INFO "The process is \"%s\" (pid %i)\n",
+       current->comm, current->pid);
 
 * PCI
 
@@ -60,6 +116,16 @@ disable_irq_nosync(IRQ_NUMBER);
 Shared interrupts, IRQ_HANDLED, IRQ_NONE (irqreturn_t).
 
 PCI express should use MSI interrupts.
+
+#+begin_src c
+  unsigned long flags;
+  
+  // disable interrupts, save flags
+  local_irq_save(flags);
+  
+  // enable interrupts, restore flags
+  local_irq_restore(flags);
+#+end_src
 
 ** bottom half scheduling
 
@@ -101,11 +167,170 @@ Can go to sleep.
 
 * spinlocks, mutexes, semaphores
 
-spin_lock(&lock);
-spin_unlock(&lock);
+Why are spinlocks/mutexes and semaphores needed?
+  Because with multicore cpus it is possible for
+  more than one CPU to try and access a single resource.
+
+Both interrupts and spinlocks/mutexes need to be employed
+to properly protect a critical section with SMP processors.
+
+Also, consider two process, one in interrupt context and
+the other in regular process context.  Spinlocks are needed
+to prevent them from both accessing the critical section.
+
+#+begin_src c
+  unsigned long flags;
+  
+  // disable interrupts, spin lock, save flags
+  spin_lock_irqsave(&mylock, flags);
+  
+  // restore interrupts, release spin lock
+  spin_unlock_irqrestore(&mylock, flags);
+#+end_src
+
+** spinlocks
+
+#+begin_src c
+  #include <linux/spinlock.h>
+  
+  spinlock_t lock = SPIN_LOCK_UNLOCKED;
+  
+  spin_lock(&lock);
+  spin_unlock(&lock);
+#+end_src
 
 Cannot use copy_to_user() or copy_from_user() because
 they may sleep.
+
+spinlocks put threads in to a spin, mutexes put threads to sleep
+
+spinlocks (short wait)
+
+spinlocks are used inside interrupt handlers
+
+For read and write operations, which can operate concurrently.
+
+** reader/writer locks
+
+#+begin_src c
+  rwlock_t myrwlock = RW_LOCK_UNLOCKED;
+  
+  read_lock(&myrwlock);
+  // critical region
+  read_unlock(&myrwlock);
+  
+  // irq variant
+  read_lock_irqsave();
+  read_lock_irqrestore();
+  
+  write_lock(&myrwlock);
+  // critical region
+  write_unlock(&myrwlock);
+  
+  // irq variant
+  write_lock_irqsave();
+  write_lock_irqrestore();
+#+end_src
+
+*** Sequence locks
+
+Sequence locks are reader/writer locks where the writers are
+favored over readers.  Used when write operations far outnumber
+read operations.
+
+#+begin_src c
+  unsigned long seq;
+  u64 ret;
+  
+  do {
+      read_seqbegin(&xtime_lock);
+      ret = jiffies_64;
+   } while (read_seqretry(&xtime_lock, seq);
+  
+   return ret;
+#+end_src
+
+#+begin_src c
+  write_seqlock();
+  write_sequnlock();
+#+end_src
+
+Read-Copy Update (RCU)
+When readers outnumber writers.
+
+** mutexes
+
+spinlocks put threads in to a spin, mutexes put threads to sleep
+
+mutexes (long wait)
+
+The mutex interface replaces the older semaphore interface.
+
+#+begin_src c
+  #include <linux/mutex.h>
+  
+  static DEFINE_MUTEX(mymutex);
+  
+  mutex_lock(&mymutex);
+  
+  mutex_unlock(&mymutex);
+#+end_src
+
+** semaphores
+
+Semaphore interface is old, mutexes should be used instead.
+
+#+begin_src c
+  #include <asm/semaphore.h>
+  
+  static DECLARE_MUTEX(mysem);
+  
+  // acquire
+  down(&mysem);
+  
+  // release
+  up(&mysem);
+#+end_src
+
+* memory allocation
+
+kmalloc()
+
+GFP_KERNEL
+GFP_ATOMIC
+
+kzalloc()
+
+vmalloc()
+  (Commonly used with DMA)
+
+look aside buffers, slabs, mempools
+
+* kernel threads, work queues
+
+kernel_thread() is depreceated in favor of the kthread API
+#+begin_src c
+  ret = kernel_thread(mykthread, NULL,
+                      CLONE_FS | CLONE_FILES | CLONE_SIGNHAND | SIGCHLD);
+
+  daemonize();
+  allow_signal();
+  signal_pending();
+#+end_src
+
+* atomic operators
+
+#+begin_src c
+  #include <include/asm-your-arch/atomic.h>
+  
+  atomic_sub_return()
+  
+  set_bit()
+  
+  clear_bit()
+  
+  test_and_set_bit()
+#+end_src
 
 * managing drivers (udev)
 
@@ -157,6 +382,7 @@ out[b|w|l|sb|sl]()
 
 \cite[Pg. 161]{ELDD}
 
+* stacking
 * misc drivers
 
 misc_register()

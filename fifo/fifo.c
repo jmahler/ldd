@@ -16,7 +16,7 @@ MODULE_LICENSE("GPL");
 // per device structure
 struct fifo_dev {
 	struct cdev cdev;
-	char *buf;
+	unsigned char *buf;
 	int buf_rd_pos;  // read position in buffer
 	int buf_wr_pos;  // write position in buffer
 	bool buf_empty;  // true if buffer is empty
@@ -172,11 +172,13 @@ fifo_write(struct file *file, const char __user *buf, size_t count, loff_t *ppos
 //	printk("  buf_wr_pos = %u\n", *buf_wr_pos);
 //	printk("  empty = %u\n", fifo_devp->buf_empty);
 
+	printk(KERN_ERR " fifo: kbuf: %p\n", kbuf);
 	kbuf += *buf_wr_pos;
+	printk(KERN_ERR "       kbuf: %p\n", kbuf);
 
 	n = copy_from_user(kbuf, (char __user *) buf, max_count);
 
-	if (0 == n) {
+	if (likely(0 == n)) {
 		*buf_wr_pos += max_count;
 		if (*buf_wr_pos >= FIFO_SIZE)
 			*buf_wr_pos = *buf_wr_pos - FIFO_SIZE;
@@ -190,6 +192,14 @@ fifo_write(struct file *file, const char __user *buf, size_t count, loff_t *ppos
 //	printk("  empty = %u\n", fifo_devp->buf_empty);
 
 		return max_count;  // OK
+	} else {
+		printk(KERN_ERR "fifo: copy_from_user didn't write %d values\n", n);
+		printk(KERN_ERR "  buf_wr_pos: %p\n", buf_wr_pos);
+		printk(KERN_ERR " *buf_wr_pos: %d\n", *buf_wr_pos);
+		printk(KERN_ERR "         buf: %p\n", buf);
+		printk(KERN_ERR "        kbuf: %p\n", kbuf);
+		//return (max_count - n);  // ~ERROR
+		return -EFAULT;
 	}
 
 	return 0;  // ERROR - nothing transferred

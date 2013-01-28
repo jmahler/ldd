@@ -1,2 +1,12 @@
 *.mod.c
 *~
+a.out
+*.bin
+*.img
+*.o
+*.ko
+*.cmd
+*.symvers
+*.order
+*.swp
+.tmp*

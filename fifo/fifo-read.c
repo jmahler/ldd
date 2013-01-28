@@ -9,7 +9,7 @@
 #include <sys/types.h>
 
 #define FIFO_SIZE 8192
-#define N 4000
+#define N FIFO_SIZE - 10
 
 int main(int argc, char **argv) {
 
@@ -17,6 +17,7 @@ int main(int argc, char **argv) {
 	char buf[FIFO_SIZE];
 	int devfd;
 	int i;
+	int n;
 
 	if ( (devfd = open(dev_file, O_RDWR)) < 0) {
 		printf("Unable to open device '%s': %s\n",
@@ -28,24 +29,12 @@ int main(int argc, char **argv) {
 	for (i = 0; i < N; i++) {
 		buf[i] = i;
 	}
-	read(devfd, buf, N);
 
-	/*
-	for (i = 0; i < N; i++) {
-		printf("read [%d]: %d\n", i, buf[i]);
+	n = read(devfd, buf, N);
+
+	if (n != N) {
+		printf("short read: %d out of %d\n", n, N);
 	}
-	*/
-
-	/*
-	read(devfd, buf, 1);
-	printf("read: %d\n", buf[0]);
-
-	read(devfd, buf, 1);
-	printf("read: %d\n", buf[0]);
-
-	read(devfd, buf, 1);
-	printf("read: %d\n", buf[0]);
-	*/
 
 	return 0;  // OK
 }
