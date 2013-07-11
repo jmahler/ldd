@@ -7,8 +7,12 @@ ldd - Linux Device Driver examples
 This is a collection Linux device drivers examples.
 
 Many of the examples are derived from two Linux device
-driver books.  In particular Linux Device Drivers (2005)
-and Essential Linux Device Drivers (2008).
+driver books: Linux Device Drivers (2005) and
+Essential Linux Device Drivers (2008).
+
+# INDEX
+
+  - hello - the simplest driver, just prints a message
 
 ## Required Packages
 
