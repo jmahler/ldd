@@ -3,6 +3,8 @@
  * Shows how a paramter can be given to insmod.
  *
  * # insmod hello.ko howmany=3
+ *
+ * Messages will be sent to syslog.
  */
 
 #include <linux/init.h>
@@ -28,7 +30,11 @@ static int __init hello_init(void)
 
 static void __exit hello_exit(void)
 {
-	pr_info("Goodbye world.\n");
+	int i;
+
+	for (i = 0; i < howmany; i++) {
+		pr_info("Goodbye world.\n");
+	}
 }
 
 module_init(hello_init);
