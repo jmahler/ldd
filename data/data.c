@@ -2,6 +2,8 @@
 #define DEVICE_NAME "data"
 #define MAX_DATA 128
 
+#define DEBUG 1
+
 #include <linux/cdev.h>
 #include <linux/device.h>
 #include <linux/fs.h>
@@ -24,6 +26,8 @@ int data_open(struct inode* inode, struct file* filp)
 {
 	struct data_dev *data_devp;
 
+	if (DEBUG) printk(KERN_ALERT "data_open()\n");
+
 	data_devp = container_of(inode->i_cdev, struct data_dev, cdev);
 
 	/* create access to devp from filp, filp is used in other operations */
@@ -37,6 +41,8 @@ ssize_t data_read(struct file *filp, char __user *buf, size_t count,
 {
 	struct data_dev *data_devp = filp->private_data;
 	size_t cnt;
+
+	if (DEBUG) printk(KERN_ALERT "data_read()\n");
 
 	cnt = (count > MAX_DATA) ? MAX_DATA : count;
 
@@ -53,6 +59,8 @@ ssize_t data_write(struct file *filp, const char __user *buf, size_t count,
 	struct data_dev *data_devp = filp->private_data;
 	size_t cnt;
 
+	if (DEBUG) printk(KERN_ALERT "data_write()\n");
+
 	cnt = (count > MAX_DATA) ? MAX_DATA : count;
 
 	if (copy_from_user((void *) data_devp->data, buf, cnt) != 0) {
@@ -64,6 +72,8 @@ ssize_t data_write(struct file *filp, const char __user *buf, size_t count,
 
 int data_release(struct inode *inode, struct file *filp)
 {
+	if (DEBUG) printk(KERN_ALERT "data_release()\n");
+
 	return 0;
 }
 
@@ -77,6 +87,8 @@ struct file_operations data_fops = {
 
 static void data_cleanup(void)
 {
+	if (DEBUG) printk(KERN_ALERT "data_cleanup()\n");
+
 	if (!data_device) {
 		device_destroy(data_class, data_major);
 		data_device = NULL;
@@ -107,6 +119,8 @@ static int __init data_init(void)
 {
 	int err = 0;
 
+	if (DEBUG) printk(KERN_ALERT "data_init()\n");
+
 	/* defaults, tested by cleanup() */
 	data_major = 0;
 	data_class = NULL;
@@ -121,6 +135,7 @@ static int __init data_init(void)
 	}
 
 	/* populate sysfs entries */
+	/* /sys/class/data/data0/ */
 	data_class = class_create(THIS_MODULE, DEVICE_NAME);
 
 	data_devp = kmalloc(sizeof(struct data_dev), GFP_KERNEL);
@@ -143,6 +158,7 @@ static int __init data_init(void)
 	}
 
 	/* send uevents to udev, so it'll create /dev nodes */
+	/* /dev/data0 */
 	data_device = device_create(data_class, NULL, data_major, NULL, "data%d",0);
 
 	return 0;  /* success */
@@ -154,6 +170,8 @@ out:
 
 static void __exit data_exit(void)
 {
+	if (DEBUG) printk(KERN_ALERT "data_exit()\n");
+
 	data_cleanup();
 }
 
