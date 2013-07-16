@@ -1,4 +1,34 @@
 
+/*
+ * NAME
+ * ----
+ *
+ * data - simplest driver that supports read/write
+ *
+ * SYNOPSIS
+ * --------
+ *
+ * This is a character driver that supports read/write of
+ * a fixed buffer of data.
+ *
+ * To test if it is working try writing some data and reading
+ * it back.  As long as MAX_DATA (128) is not exceeded it should
+ * be reproduced.
+ *
+ *   $ sudo dd if=data.c of=/dev/data0 bs=128 count=1
+ *
+ *   $ sudo dd if=/dev/data0 of=out1 bs=128 count=1
+ *   (out1 should have the data from data.c)
+ *
+ * The read always start from 0 so
+ *
+ *   $ sudo dd if=data.c of=/dev/data0 bs=64 count=2
+ *
+ * would read 64 bytes from the beginning twice.
+ * And it behaves similarly for write.
+ *
+ */
+
 #define DEVICE_NAME "data"
 #define MAX_DATA 128
 

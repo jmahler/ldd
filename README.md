@@ -19,9 +19,7 @@ Essential Linux Device Drivers (2008).
 
   - param - hello but with a parameter
 
-  - data - read/write a fixed chunk of data
-		read, write, kmalloc, chrdev, alloc_chrdev_region(), cdev_init(),
-		cdev_add()
+  - data - the simplest read/write
 
 ## Required Packages
 
