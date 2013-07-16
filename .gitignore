@@ -12,3 +12,4 @@ a.out
 .tmp*
 *.htm
 log.txt
+ldd-book

@@ -12,7 +12,16 @@ Essential Linux Device Drivers (2008).
 
 # INDEX
 
-  - hello - the simplest driver, just prints a message
+(in order from simple to more complex)
+
+  - hello - "Hello, World" driver, prints a message on load/unload
+		printk, module_init, module_exit
+
+  - param - hello but with a parameter
+
+  - data - read/write a fixed chunk of data
+		read, write, kmalloc, chrdev, alloc_chrdev_region(), cdev_init(),
+		cdev_add()
 
 ## Required Packages
 
@@ -25,7 +34,7 @@ kernel version.
 
 ## Compiling Modules
 
-Each of the examples will have a Makefil similar to
+Each of the examples will have a Makefile similar to
 the one given below except with the name of that
 specific module in place of 'example.o'.
 
