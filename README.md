@@ -15,11 +15,14 @@ Essential Linux Device Drivers (2008).
 (in order from simple to more complex)
 
   - hello - "Hello, World" driver, prints a message on load/unload
-		printk, module_init, module_exit
 
   - param - hello but with a parameter
 
-  - data - the simplest read/write
+  - datrw - the simplest read/write char driver
+
+  - datsk - seekable read/write
+
+  - ioctl - out of band data read/write using ioctl
 
 ## Required Packages
 
