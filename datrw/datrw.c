@@ -50,6 +50,7 @@ struct datrw_dev {
 } *datrw_devp;
 
 struct class *datrw_class;
+struct device *datrw_device;
 
 int datrw_open(struct inode* inode, struct file* filp)
 {
@@ -118,25 +119,34 @@ static void datrw_cleanup(void)
 {
 	if (DEBUG) printk(KERN_ALERT "datrw_cleanup()\n");
 
-	if (!datrw_class) {
+	if (datrw_major) {
+		if (DEBUG) printk(KERN_ALERT "datrw: unregister_chrdev_region()\n");
+		unregister_chrdev_region(datrw_major, 1);
+		datrw_major = 0;
+	}
+
+	if (datrw_device) {
+		if (DEBUG) printk(KERN_ALERT "datrw: device_destroy()\n");
 		device_destroy(datrw_class, datrw_major);
-		class_destroy(datrw_class);
-		datrw_class = NULL;
+		datrw_device = NULL;
 	}
 
 	if (cdev_add_done) {
+		if (DEBUG) printk(KERN_ALERT "datrw: cdev_del()\n");
 		cdev_del(&datrw_devp->cdev);
 		cdev_add_done = 0;
 	}
 
-	if (!datrw_devp) {
+	if (datrw_devp) {
+		if (DEBUG) printk(KERN_ALERT "datrw: kfree()\n");
 		kfree(datrw_devp);
 		datrw_devp = NULL;
 	}
 
-	if (datrw_major) {
-		unregister_chrdev_region(datrw_major, 1);
-		datrw_major = 0;
+	if (datrw_class) {
+		if (DEBUG) printk(KERN_ALERT "datrw: class_destroy()\n");
+		class_destroy(datrw_class);
+		datrw_class = NULL;
 	}
 }
 
@@ -149,6 +159,7 @@ static int __init datrw_init(void)
 	/* defaults, tested by cleanup() */
 	datrw_major = 0;
 	datrw_class = NULL;
+	datrw_device = NULL;
 	datrw_devp = NULL;
 	cdev_add_done = 0;
 
@@ -157,6 +168,10 @@ static int __init datrw_init(void)
 		err = -1;
 		goto out;
 	}
+
+	/* populate sysfs entries */
+	/* /sys/class/datrw/datrw0/ */
+	datrw_class = class_create(THIS_MODULE, DEVICE_NAME);
 
 	datrw_devp = kmalloc(sizeof(struct datrw_dev), GFP_KERNEL);
 	if (!datrw_devp) {
@@ -167,23 +182,19 @@ static int __init datrw_init(void)
 
 	cdev_init(&datrw_devp->cdev, &datrw_fops);
 	datrw_devp->cdev.owner = THIS_MODULE;
-	datrw_devp->cdev.ops = &datrw_fops;
+	//datrw_devp->cdev.ops = &datrw_fops;
 	err = cdev_add(&datrw_devp->cdev, datrw_major, 1);
 	if (err) {
 		printk(KERN_WARNING "cdev_add failed\n");
 		//err = err;
 		goto out;
 	} else {
-		cdev_add_done = 0;
+		cdev_add_done = 1;
 	}
-
-	/* populate sysfs entries */
-	/* /sys/class/datrw/datrw0/ */
-	datrw_class = class_create(THIS_MODULE, DEVICE_NAME);
 
 	/* send uevents to udev, so it'll create /dev nodes */
 	/* /dev/datrw0 */
-	device_create(datrw_class, NULL, datrw_major, NULL, "datrw%d",0);
+	datrw_device = device_create(datrw_class, NULL, MKDEV(MAJOR(datrw_major), 0), NULL, "datrw%d",0);
 
 	return 0;  /* success */
 
