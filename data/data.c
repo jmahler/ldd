@@ -50,7 +50,6 @@ struct data_dev {
 } *data_devp;
 
 struct class *data_class;
-struct device *data_device;
 
 int data_open(struct inode* inode, struct file* filp)
 {
@@ -119,9 +118,10 @@ static void data_cleanup(void)
 {
 	if (DEBUG) printk(KERN_ALERT "data_cleanup()\n");
 
-	if (!data_device) {
+	if (!data_class) {
 		device_destroy(data_class, data_major);
-		data_device = NULL;
+		class_destroy(data_class);
+		data_class = NULL;
 	}
 
 	if (cdev_add_done) {
@@ -132,11 +132,6 @@ static void data_cleanup(void)
 	if (!data_devp) {
 		kfree(data_devp);
 		data_devp = NULL;
-	}
-
-	if (!data_class) {
-		class_destroy(data_class);
-		data_class = NULL;
 	}
 
 	if (data_major) {
@@ -154,7 +149,6 @@ static int __init data_init(void)
 	/* defaults, tested by cleanup() */
 	data_major = 0;
 	data_class = NULL;
-	data_device = NULL;
 	data_devp = NULL;
 	cdev_add_done = 0;
 
@@ -163,10 +157,6 @@ static int __init data_init(void)
 		err = -1;
 		goto out;
 	}
-
-	/* populate sysfs entries */
-	/* /sys/class/data/data0/ */
-	data_class = class_create(THIS_MODULE, DEVICE_NAME);
 
 	data_devp = kmalloc(sizeof(struct data_dev), GFP_KERNEL);
 	if (!data_devp) {
@@ -187,9 +177,13 @@ static int __init data_init(void)
 		cdev_add_done = 0;
 	}
 
+	/* populate sysfs entries */
+	/* /sys/class/data/data0/ */
+	data_class = class_create(THIS_MODULE, DEVICE_NAME);
+
 	/* send uevents to udev, so it'll create /dev nodes */
 	/* /dev/data0 */
-	data_device = device_create(data_class, NULL, data_major, NULL, "data%d",0);
+	device_create(data_class, NULL, data_major, NULL, "data%d",0);
 
 	return 0;  /* success */
 
