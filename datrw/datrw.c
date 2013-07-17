@@ -182,7 +182,6 @@ static int __init datrw_init(void)
 
 	cdev_init(&datrw_devp->cdev, &datrw_fops);
 	datrw_devp->cdev.owner = THIS_MODULE;
-	//datrw_devp->cdev.ops = &datrw_fops;
 	err = cdev_add(&datrw_devp->cdev, datrw_major, 1);
 	if (err) {
 		printk(KERN_WARNING "cdev_add failed\n");
