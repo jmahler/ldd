@@ -18,11 +18,21 @@ Essential Linux Device Drivers (2008).
 
   - param - hello but with a parameter
 
-  - datrw - the simplest read/write char driver
+  - datchr - character driver creation
+
+  - datrw - read/write
 
   - datsk - seekable read/write
 
+	(to be developed)
+
+  - datsem - semaphore controlled data
+
   - ioctl - out of band data read/write using ioctl
+
+  - readv, writev
+
+  - mmap
 
 ## Required Packages
 
