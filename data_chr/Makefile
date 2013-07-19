@@ -1,5 +1,5 @@
 
-obj-m := datsk.o
+obj-m := data.o
 
 path := $(shell uname -r)
 

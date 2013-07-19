@@ -6,7 +6,7 @@ ldd - Linux Device Driver examples
 
 This is a collection Linux device drivers examples.
 
-Many of the examples are derived from two Linux device
+Many of the examples were derived from two Linux device
 driver books: Linux Device Drivers (2005) and
 Essential Linux Device Drivers (2008).
 
@@ -18,13 +18,20 @@ Essential Linux Device Drivers (2008).
 
   - param - "Hello, World" that takes a parameter
 
-  - datchr - creation of a character device
+The "data" driver simply provides memory that can be read/written.
+The driver is built up in steps.  What has changed between steps
+can be seen using 'diff'.
 
-  - datrw - read/write
+    $ cd data_rw
+    $ diff data.c ../data_chr/data.c
 
-  - datsk - seekable read/write
+  - data_chr - creation of a character device, load/unload
 
-	(in development)
+  - data_rw - read/write
+
+  - data_sk - seekable read/write
+
+(in development)
 
   - datsem - semaphore controlled data
 
@@ -34,7 +41,7 @@ Essential Linux Device Drivers (2008).
 
   - mmap
 
-## Required Packages
+# REQUIRED PACKAGES
 
 To compile these modules under Debian the following
 packages had to be installed.  Adjust for your specific
@@ -66,6 +73,11 @@ And then root can insmod and rmmod the module as usual.
 
     root# insmod example.ko
     root# rmmod example
+
+# AUTHOR
+
+Jeremiah Mahler <jmmahler@gmail.com><br>
+<https://plus.google.com/101159326398579740638/about>
 
 # COPYRIGHT
 
