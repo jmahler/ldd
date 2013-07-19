@@ -45,23 +45,19 @@ ssize_t data_read(struct file *filp, char __user *buf, size_t count,
 	size_t cnt;
 	size_t cur_ofs;
 	char *datp;
-	size_t sent;
+	size_t left;
 
 	cur_ofs = data_devp->cur_ofs;
 	datp = data_devp->data;
-	sent = 0;
+	left = count;
 
 	if (DEBUG) printk(KERN_ALERT "data_read(%zu)\n", count);
 
-	while (sent != count) {
-		/* reset to begining if we reach the end */
-		if (cur_ofs == MAX_DATA)
-			cur_ofs = 0;
-
+	while (left) {
 		/* limit the size of this transfer */
-		cnt = cur_ofs + count;
-		if (cnt > MAX_DATA)
-			cnt = MAX_DATA;
+		cnt = MAX_DATA - cur_ofs;
+		if (cnt > left)
+			cnt = left;
 
 		if (DEBUG) printk(KERN_ALERT "  read: %zu\n", cnt);
 
@@ -70,8 +66,12 @@ ssize_t data_read(struct file *filp, char __user *buf, size_t count,
 		}
 
 		buf += cnt;
+		left -= cnt;
 		cur_ofs += cnt;
-		sent += cnt;
+
+		/* reset to begining if we reach the end */
+		if (cur_ofs == MAX_DATA)
+			cur_ofs = 0;
 	}
 
 	if (DEBUG) printk(KERN_ALERT "  new offset: %zu\n", cur_ofs);
@@ -88,23 +88,19 @@ ssize_t data_write(struct file *filp, const char __user *buf, size_t count,
 	size_t cnt;
 	size_t cur_ofs;
 	char *datp;
-	size_t sent;
+	size_t left;
 
 	if (DEBUG) printk(KERN_ALERT "data_write(%zu)\n", count);
 
 	cur_ofs = data_devp->cur_ofs;
 	datp = data_devp->data;
-	sent = 0;
+	left = count;
 
-	while (sent != count) {
-		/* reset to begining if we reach the end */
-		if (cur_ofs == MAX_DATA)
-			cur_ofs = 0;
-
+	while (left) {
 		/* limit the size of this transfer */
-		cnt = cur_ofs + count;
-		if (cnt > MAX_DATA)
-			cnt = MAX_DATA;
+		cnt = MAX_DATA - cur_ofs;
+		if (cnt > left)
+			cnt = left;
 
 		if (DEBUG) printk(KERN_ALERT "  write: %zu\n", cnt);
 
@@ -113,8 +109,12 @@ ssize_t data_write(struct file *filp, const char __user *buf, size_t count,
 		}
 
 		buf += cnt;
+		left -= cnt;
 		cur_ofs += cnt;
-		sent += cnt;
+
+		/* reset to begining if we reach the end */
+		if (cur_ofs == MAX_DATA)
+			cur_ofs = 0;
 	}
 
 	if (DEBUG) printk(KERN_ALERT "  new offset: %zu\n", cur_ofs);
