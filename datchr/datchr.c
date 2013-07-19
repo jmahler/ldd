@@ -31,31 +31,26 @@ static void datchr_cleanup(void)
 	if (datchr_major) {
 		if (DEBUG) printk(KERN_ALERT "datchr: unregister_chrdev_region()\n");
 		unregister_chrdev_region(datchr_major, 1);
-		datchr_major = 0;
 	}
 
 	if (datchr_device) {
 		if (DEBUG) printk(KERN_ALERT "datchr: device_destroy()\n");
 		device_destroy(datchr_class, datchr_major);
-		datchr_device = NULL;
 	}
 
 	if (cdev_add_done) {
 		if (DEBUG) printk(KERN_ALERT "datchr: cdev_del()\n");
 		cdev_del(&datchr_devp->cdev);
-		cdev_add_done = 0;
 	}
 
 	if (datchr_devp) {
 		if (DEBUG) printk(KERN_ALERT "datchr: kfree()\n");
 		kfree(datchr_devp);
-		datchr_devp = NULL;
 	}
 
 	if (datchr_class) {
 		if (DEBUG) printk(KERN_ALERT "datchr: class_destroy()\n");
 		class_destroy(datchr_class);
-		datchr_class = NULL;
 	}
 }
 
