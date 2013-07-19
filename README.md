@@ -24,7 +24,7 @@ Essential Linux Device Drivers (2008).
 
   - datsk - seekable read/write
 
-	(to be developed)
+	(in development)
 
   - datsem - semaphore controlled data
 

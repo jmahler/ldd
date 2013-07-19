@@ -1,7 +1,0 @@
-hello.mod.*
-*.o
-.*
-*.swp
-*.ko
-*.symvers
-*.order
