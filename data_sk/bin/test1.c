@@ -12,10 +12,12 @@
 int main() {
 
 	int devfd;
-	char buf[MAX_DATA];
-	int i;
+	char bufw[MAX_DATA];
+	char bufr[MAX_DATA];
+	int i, j;
 	ssize_t ret;
 	off_t ofs;
+	int testn = 0;
 
 	devfd = open(DEVFILE, O_RDWR);
 	if (-1 == devfd) {
@@ -23,30 +25,92 @@ int main() {
 		return EXIT_FAILURE;
 	}
 
+	/* store count values */
+
 	for (i = 0; i < MAX_DATA; i++) {
-		buf[i] = i;
+		bufw[i] = i;
 	}
 
-	ret = write(devfd, (void *) buf, MAX_DATA);
+	ret = write(devfd, (void *) bufw, MAX_DATA);
 	if (-1 == ret) {
 		perror("write()");
 		return EXIT_FAILURE;
 	}
 
-	/* go to the middle of the buffer */
-	ofs = lseek(devfd, MAX_DATA/2, SEEK_CUR);
-	if (-1 == ofs) {
+	/* test 1, read fro the begining */
+
+	ofs = lseek(devfd, 0, SEEK_SET);
+	if ((off_t) -1 == ofs) {
 		perror("lseek()");
 		return EXIT_FAILURE;
 	}
 
-	ret = read(devfd, buf, MAX_DATA);
+	ret = read(devfd, bufr, MAX_DATA);
 	if (-1 == ret) {
 		perror("read()");
 		return EXIT_FAILURE;
 	}
+	for (i = 0; i < MAX_DATA; i++) {
+		if (bufr[i] != bufw[i]) {
+			printf("[%u] invalid: %u != %u\n", i, bufr[i], bufw[i]);
+			return EXIT_FAILURE;
+		}
+	}
+	printf("test %u OK\n", ++testn);
 
-	write(STDOUT_FILENO, buf, MAX_DATA);
+	/* test 2, read from the end */
+
+	ofs = lseek(devfd, -1, SEEK_END);
+	if ((off_t) -1 == ofs) {
+		perror("lseek()");
+		return EXIT_FAILURE;
+	}
+
+	ret = read(devfd, bufr, MAX_DATA);
+	if (-1 == ret) {
+		perror("read()");
+		return EXIT_FAILURE;
+	}
+	for (i = 0, j = MAX_DATA-1; i < MAX_DATA; i++) {
+		if (bufr[i] != bufw[j]) {
+			printf("invalid: r[%u] = %u, w[%u] = %u\n", i, bufr[i], j, bufw[j]);
+			return EXIT_FAILURE;
+		}
+
+		if (++j > MAX_DATA-1)
+			j = 0;
+	}
+	printf("test %u OK\n", ++testn);
+
+	/* test 3, start from the middle */
+
+	ofs = lseek(devfd, 0, SEEK_SET);
+	if ((off_t) -1 == ofs) {
+		perror("lseek()");
+		return EXIT_FAILURE;
+	}
+
+	ofs = lseek(devfd, 64, SEEK_CUR);
+	if ((off_t) -1 == ofs) {
+		perror("lseek()");
+		return EXIT_FAILURE;
+	}
+
+	ret = read(devfd, bufr, MAX_DATA);
+	if (-1 == ret) {
+		perror("read()");
+		return EXIT_FAILURE;
+	}
+	for (i = 0, j = 64; i < MAX_DATA; i++) {
+		if (bufr[i] != bufw[j]) {
+			printf("invalid: r[%u] = %u, w[%u] = %u\n", i, bufr[i], j, bufw[j]);
+			return EXIT_FAILURE;
+		}
+
+		if (++j > MAX_DATA-1)
+			j = 0;
+	}
+	printf("test %u OK\n", ++testn);
 
 	close(devfd);
 
