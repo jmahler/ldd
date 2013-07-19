@@ -122,31 +122,26 @@ static void datrw_cleanup(void)
 	if (datrw_major) {
 		if (DEBUG) printk(KERN_ALERT "datrw: unregister_chrdev_region()\n");
 		unregister_chrdev_region(datrw_major, 1);
-		datrw_major = 0;
 	}
 
 	if (datrw_device) {
 		if (DEBUG) printk(KERN_ALERT "datrw: device_destroy()\n");
 		device_destroy(datrw_class, datrw_major);
-		datrw_device = NULL;
 	}
 
 	if (cdev_add_done) {
 		if (DEBUG) printk(KERN_ALERT "datrw: cdev_del()\n");
 		cdev_del(&datrw_devp->cdev);
-		cdev_add_done = 0;
 	}
 
 	if (datrw_devp) {
 		if (DEBUG) printk(KERN_ALERT "datrw: kfree()\n");
 		kfree(datrw_devp);
-		datrw_devp = NULL;
 	}
 
 	if (datrw_class) {
 		if (DEBUG) printk(KERN_ALERT "datrw: class_destroy()\n");
 		class_destroy(datrw_class);
-		datrw_class = NULL;
 	}
 }
 

@@ -172,31 +172,26 @@ static void datsk_cleanup(void)
 	if (datsk_major) {
 		if (DEBUG) printk(KERN_ALERT "datsk: unregister_chrdev_region()\n");
 		unregister_chrdev_region(datsk_major, 1);
-		datsk_major = 0;
 	}
 
 	if (datsk_device) {
 		if (DEBUG) printk(KERN_ALERT "datsk: device_destroy()\n");
 		device_destroy(datsk_class, datsk_major);
-		datsk_device = NULL;
 	}
 
 	if (cdev_add_done) {
 		if (DEBUG) printk(KERN_ALERT "datsk: cdev_del()\n");
 		cdev_del(&datsk_devp->cdev);
-		cdev_add_done = 0;
 	}
 
 	if (datsk_devp) {
 		if (DEBUG) printk(KERN_ALERT "datsk: kfree()\n");
 		kfree(datsk_devp);
-		datsk_devp = NULL;
 	}
 
 	if (datsk_class) {
 		if (DEBUG) printk(KERN_ALERT "datsk: class_destroy()\n");
 		class_destroy(datsk_class);
-		datsk_class = NULL;
 	}
 }
 
