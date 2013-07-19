@@ -139,8 +139,10 @@ static loff_t data_llseek(struct file *filp, loff_t offset, int orig)
 			break;
 		case 1: /* SEEK_CUR */
 			cur_ofs += offset;
+			break;
 		case 2: /* SEEK_END */
 			cur_ofs = (MAX_DATA - 1) + offset;
+			break;
 		default:
 			return -EINVAL;
 	}
