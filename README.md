@@ -16,9 +16,9 @@ Essential Linux Device Drivers (2008).
 
   - hello - "Hello, World" driver, prints a message on load/unload
 
-  - param - hello but with a parameter
+  - param - "Hello, World" that takes a parameter
 
-  - datchr - character driver creation
+  - datchr - creation of a character device
 
   - datrw - read/write
 
