@@ -31,11 +31,12 @@ can be seen using 'diff'.
 
   - data_sk - seekable read/write
 
+  - ioctx - read/write value using ioctl()
+
 (in development)
 
   - datsem - semaphore controlled data
 
-  - ioctl - out of band data read/write using ioctl
 
   - readv, writev
 
