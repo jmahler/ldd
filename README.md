@@ -33,10 +33,11 @@ can be seen using 'diff'.
 
   - ioctx - read/write value using ioctl()
 
+  - null - creating /dev/null0 from a char device
+
 (in development)
 
   - datsem - semaphore controlled data
-
 
   - readv, writev
 
