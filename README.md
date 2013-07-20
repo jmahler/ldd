@@ -33,7 +33,13 @@ can be seen using 'diff'.
 
   - ioctx - read/write value using ioctl()
 
+The following null and zero drivers don't introduce any new concepts.
+But they do show how to construct these familiar devices using the
+techniques shown so far.
+
   - null - creating /dev/null0 from a char device
+
+  - zero - creating /dev/zero from a char device
 
 (in development)
 
