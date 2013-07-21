@@ -23,8 +23,10 @@ struct class *fifo_class;
 struct device *fifo_device;
 
 char fifo[MAX_DATA];
-size_t read_ofs;
-size_t write_ofs;
+char *read_ptr;
+char *write_ptr;
+char *fifo_start;
+char *fifo_end;
 
 int fifo_open(struct inode* inode, struct file* filp)
 {
@@ -42,9 +44,8 @@ int fifo_open(struct inode* inode, struct file* filp)
 
 /*
  * The fifo is implemented using a cirular buffer.
- * It has a read offset (read_ofs) and a write offset (write_ofs).
- * Reads can be performed until it reaches the write offset.
- * And writes can be performed until it reaches the read offset.
+ * It is empty when the read and write pointers are the same.
+ * And it is full when the write pointer is just behind the read.
  *
  * Read as much data as possible:
  *
@@ -84,15 +85,15 @@ ssize_t fifo_read(struct file *filp, char __user *buf, size_t count,
 	left = count;
 
 	if (DEBUG) printk(KERN_ALERT "fifo_read(%zu)\n", count);
-	if (DEBUG) printk(KERN_ALERT "  offset, read, write: %zu, %zu\n",
-										read_ofs, write_ofs);
+	if (DEBUG) printk(KERN_ALERT "  offset, read, write: %p, %p\n",
+										read_ptr, write_ptr);
 
-	while (left && read_ofs != write_ofs) {
+	while (left && read_ptr != write_ptr) {
 
-		if (write_ofs > read_ofs) {
-			cnt = write_ofs - read_ofs;
+		if (write_ptr > read_ptr) {
+			cnt = write_ptr - read_ptr;
 		} else {
-			cnt = MAX_DATA - read_ofs;
+			cnt = fifo_end - read_ptr;
 		}
 
 		if (cnt > left)
@@ -100,18 +101,18 @@ ssize_t fifo_read(struct file *filp, char __user *buf, size_t count,
 
 		if (DEBUG) printk(KERN_ALERT "  to read: %zu\n", cnt);
 
-		if (copy_to_user(buf, (void *) &fifo[read_ofs], cnt) != 0) {
+		if (copy_to_user(buf, (void *) read_ptr, cnt) != 0) {
 			return -EIO;
 		}
 
 		buf += cnt;
 		left -= cnt;
-		read_ofs += cnt;
+		read_ptr += cnt;
 
-		if (read_ofs == MAX_DATA)
-			read_ofs = 0;
+		if (read_ptr == fifo_end)
+			read_ptr = fifo_start;
 
-		if (DEBUG) printk(KERN_ALERT "  read_ofs: %zu\n", read_ofs);
+		if (DEBUG) printk(KERN_ALERT "  read_ptr: %p\n", read_ptr);
 	}
 
 	return (count - left);
@@ -124,20 +125,20 @@ ssize_t fifo_write(struct file *filp, const char __user *buf, size_t count,
 	size_t left;
 
 	if (DEBUG) printk(KERN_ALERT "fifo_write(%zu)\n", count);
-	if (DEBUG) printk(KERN_ALERT "  offset, read, write: %zu, %zu\n",
-										read_ofs, write_ofs);
+	if (DEBUG) printk(KERN_ALERT "  offset, read, write: %p, %p\n",
+										read_ptr, write_ptr);
 
 	left = count;
 
 	while (left) {
 
-		if ( (write_ofs == (MAX_DATA - 1)) && (0 == read_ofs) ) {
-			/* loop end to beginning, full, write_ofs < read_ofs */
+		if ( (write_ptr == fifo_end) && (read_ptr == fifo_start) ) {
+			/* loop end to beginning, full, write_ptr < read_ptr */
 			break;
-		} else if (write_ofs >= read_ofs) {
-			cnt = MAX_DATA - write_ofs;
-		} else { // write_ofs < read_ofs
-			cnt = (read_ofs - 1) - write_ofs;
+		} else if (write_ptr >= read_ptr) {
+			cnt = fifo_end - write_ptr;
+		} else { // write_ptr < read_ptr
+			cnt = (read_ptr - 1) - write_ptr;
 			if (0 == cnt)
 				break;
 		}
@@ -147,19 +148,19 @@ ssize_t fifo_write(struct file *filp, const char __user *buf, size_t count,
 
 		if (DEBUG) printk(KERN_ALERT "  write: %zu\n", cnt);
 
-		if (copy_from_user((void *) &fifo[write_ofs], buf, cnt) != 0) {
+		if (copy_from_user((void *) write_ptr, buf, cnt) != 0) {
 			return -EIO;
 		}
 
 		buf += cnt;
 		left -= cnt;
-		write_ofs += cnt;
+		write_ptr += cnt;
 
 		/* reset to begining if we reach the end */
-		if (write_ofs == MAX_DATA)
-			write_ofs = 0;
+		if (write_ptr == fifo_end)
+			write_ptr = fifo_start;
 
-		if (DEBUG) printk(KERN_ALERT "  write_ofs: %zu\n", write_ofs);
+		if (DEBUG) printk(KERN_ALERT "  write_ptr: %p\n", write_ptr);
 	}
 
 	return (count - left);
@@ -216,8 +217,10 @@ static int __init fifo_init(void)
 
 	if (DEBUG) printk(KERN_ALERT "fifo_init()\n");
 
-	read_ofs = 0;
-	write_ofs = 0;
+	read_ptr = &fifo[0];
+	write_ptr = &fifo[0];
+	fifo_start = &fifo[0];
+	fifo_end = &fifo[MAX_DATA-1];
 
 	/* defaults, tested by cleanup() */
 	fifo_major = 0;
