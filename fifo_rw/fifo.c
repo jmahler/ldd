@@ -2,14 +2,15 @@
 #define DEVICE_NAME "fifo"
 #define MAX_DATA 128
 
-#define DEBUG 1
-
 #include <linux/cdev.h>
 #include <linux/device.h>
 #include <linux/fs.h>
 #include <linux/module.h>
 #include <linux/slab.h>
 #include <linux/uaccess.h>
+
+static int DEBUG = 0;
+module_param(DEBUG, int, S_IRUGO);
 
 static dev_t fifo_major;
 static int cdev_add_done;
