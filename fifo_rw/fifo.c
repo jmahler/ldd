@@ -85,8 +85,9 @@ ssize_t fifo_read(struct file *filp, char __user *buf, size_t count,
 	left = count;
 
 	if (DEBUG) printk(KERN_ALERT "fifo_read(%zu)\n", count);
-	if (DEBUG) printk(KERN_ALERT "  offset, read, write: %p, %p\n",
-										read_ptr, write_ptr);
+	if (DEBUG) printk(KERN_ALERT "  offset, read, write: %zu, %zu\n",
+										read_ptr - fifo_start,
+										write_ptr - fifo_start);
 
 	while (left && read_ptr != write_ptr) {
 
@@ -112,7 +113,8 @@ ssize_t fifo_read(struct file *filp, char __user *buf, size_t count,
 		if (read_ptr == fifo_end)
 			read_ptr = fifo_start;
 
-		if (DEBUG) printk(KERN_ALERT "  read_ptr: %p\n", read_ptr);
+		if (DEBUG) printk(KERN_ALERT "  read_offset: %zu\n",
+											read_ptr - fifo_start);
 	}
 
 	return (count - left);
@@ -125,8 +127,9 @@ ssize_t fifo_write(struct file *filp, const char __user *buf, size_t count,
 	size_t left;
 
 	if (DEBUG) printk(KERN_ALERT "fifo_write(%zu)\n", count);
-	if (DEBUG) printk(KERN_ALERT "  offset, read, write: %p, %p\n",
-										read_ptr, write_ptr);
+	if (DEBUG) printk(KERN_ALERT "  offset, read, write: %zu, %zu\n",
+										read_ptr - fifo_start,
+										write_ptr - fifo_start);
 
 	left = count;
 
@@ -160,7 +163,8 @@ ssize_t fifo_write(struct file *filp, const char __user *buf, size_t count,
 		if (write_ptr == fifo_end)
 			write_ptr = fifo_start;
 
-		if (DEBUG) printk(KERN_ALERT "  write_ptr: %p\n", write_ptr);
+		if (DEBUG) printk(KERN_ALERT "  write offset: %zu\n",
+										write_ptr - fifo_start);
 	}
 
 	return (count - left);
