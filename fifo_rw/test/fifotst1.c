@@ -16,6 +16,17 @@
 
 #define TBYTES 57
 
+void spinner() {
+	static unsigned int i = 0;
+	static char cs[4] = "-\\|/";
+
+	printf("\b%c", cs[i++]);
+	fflush(stdout);
+
+	if (i >= sizeof(cs))
+		i = 0;
+}
+
 int main()
 {
 	int devfd;
@@ -27,6 +38,7 @@ int main()
 	devfd = open(DEVFILE, O_RDWR);
 	if (-1 == devfd) {
 		perror("open()");
+		return EXIT_FAILURE;
 	}
 
 	for (i = 0; i < TBYTES; i++) {
@@ -37,6 +49,7 @@ int main()
 		n = write(devfd, wbuf, TBYTES);
 		if (-1 == n) {
 			perror("write()");
+			return EXIT_FAILURE;
 		} else if (n < TBYTES) {
 			fprintf(stderr, "short write\n");
 			return EXIT_FAILURE;
@@ -47,6 +60,7 @@ int main()
 		n = read(devfd, rbuf, TBYTES);
 		if (-1 == n) {
 			perror("read()");
+			return EXIT_FAILURE;
 		} else if (n < TBYTES) {
 			fprintf(stderr, "short read\n");
 			return EXIT_FAILURE;
@@ -59,6 +73,8 @@ int main()
 				return EXIT_FAILURE;
 			}
 		}
+
+		spinner();
 	}
 
 	return EXIT_SUCCESS;
