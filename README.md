@@ -1,8 +1,8 @@
-# NAME
+## NAME
 
 ldd - Linux Device Driver examples
 
-# DESCRIPTION
+## DESCRIPTION
 
 This is a collection Linux device drivers examples.
 
@@ -10,9 +10,9 @@ Many of the examples were derived from two Linux device
 driver books: Linux Device Drivers (2005) and
 Essential Linux Device Drivers (2008).
 
-# INDEX
+## INDEX
 
-(in order from simple to more complex)
+(in order of increasing complexity)
 
   - hello - "Hello, World" driver, prints a message on load/unload
 
@@ -25,31 +25,37 @@ can be seen using 'diff'.
     $ cd data_rw
     $ diff data.c ../data_chr/data.c
 
-  - data_chr - creation of a character device, load/unload
+  - data\_chr - creation of a character device, load/unload
 
-  - data_rw - read/write
+  - data\_rw - read/write
 
-  - data_sk - seekable read/write
+  - data\_sk - seekable read/write
 
-  - ioctx - read/write value using ioctl()
+Instead of reading/writing a device file, ioctl() can be used
+for a single value.
 
-The following null and zero drivers don't introduce any new concepts.
-But they do show how to construct these familiar devices using the
-techniques shown so far.
+  - ioctlx - read/write value using ioctl()
 
-  - null - creating /dev/null0 from a char device
+From the character driver techniques discussed so far,
+the familiar `/dev/null` and `/dev/zero` can be constructed.
+
+  - null - creating /dev/null from a char device
 
   - zero - creating /dev/zero from a char device
 
-(in development)
+A fifo (first in first out) driver exemplifying poll() operations.
 
-  - datsem - semaphore controlled data
+  - fifo\_rw - read/write fifo, similar to data\_rw
 
-  - readv, writev
+To try out the fifo, use echo and cat.
 
-  - mmap
+    $ echo -n "Hello, World" > /dev/fifo0
+    $ cat /dev/fifo0
+    (should see the stored message)
 
-# REQUIRED PACKAGES
+  - fifo\_poll - addition of poll() capability
+
+## REQUIRED PACKAGES
 
 To compile these modules under Debian the following
 packages had to be installed.  Adjust for your specific
@@ -58,7 +64,7 @@ kernel version.
     root# apt-get install linux-source-3.9
     root# apt-get install linux-headers-3.9-1-686-pae
 
-## Compiling Modules
+### Compiling Modules
 
 Each of the examples will have a Makefile similar to
 the one given below except with the name of that
@@ -70,7 +76,7 @@ specific module in place of 'example.o'.
     path := $(shell uname -r)
     
     all:
-        echo $(EXTRA_CFLAGS)
+        echo $(EXTRA\_CFLAGS)
         make -C /lib/modules/$(path)/build M=$(PWD) modules
     
     clean:
@@ -82,12 +88,12 @@ And then root can insmod and rmmod the module as usual.
     root# insmod example.ko
     root# rmmod example
 
-# AUTHOR
+## AUTHOR
 
 Jeremiah Mahler <jmmahler@gmail.com><br>
 <https://plus.google.com/101159326398579740638/about>
 
-# COPYRIGHT
+## COPYRIGHT
 
 Copyright &copy; 2013, Jeremiah Mahler All Rights Reserved.<br>
 This project is free software and released under
