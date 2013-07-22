@@ -1,12 +1,12 @@
 
-OBJS := fifo_rw
+obj-m := fifo.o
 
-ARGV := -Wall -Wextra -O2 -g
+path := $(shell uname -r)
 
-all: $(OBJS)
-
-%: %.c
-	gcc $(ARGV) $< -o $@
+all:
+	echo $(EXTRA_CFLGAS)
+	make -C /lib/modules/$(path)/build M=$(PWD) modules
 
 clean:
-	-rm -f $(OBJS)
+	make -C /lib/modules/$(path)/build M=$(PWD) clean
+
