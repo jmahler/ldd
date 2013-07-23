@@ -3,13 +3,14 @@
 #define MAX_DATA 128
 
 #include <linux/cdev.h>
+#include <linux/delay.h>
 #include <linux/device.h>
 #include <linux/fs.h>
 #include <linux/module.h>
+#include <linux/mutex.h>
+#include <linux/sched.h>
 #include <linux/slab.h>
 #include <linux/uaccess.h>
-#include <linux/delay.h>
-#include <linux/mutex.h>
 
 static int DEBUG = 0;
 module_param(DEBUG, int, S_IRUGO);
@@ -33,25 +34,50 @@ char *fifo_end;
 static DEFINE_MUTEX(read_mtx);
 static DEFINE_MUTEX(write_mtx);
 
+#define HALF_SEC 500  /* ms */
+
 /* exaggerate race conditions by waiting for multiple processes */
-#define NWAIT 2
-int wait;
-#define pwait(mtx) \
-	mutex_lock(&mtx); \
-	wait++; \
-	mutex_unlock(&mtx); \
-	if (DEBUG) printk(KERN_ALERT "wait in %d\n", wait); \
-	while(wait != NWAIT) {\
-		msleep(500); \
-	} \
-	mutex_lock(&mtx); \
-	wait--; \
-	mutex_unlock(&mtx); \
-	if (DEBUG) printk(KERN_ALERT "wait out %d\n", wait); \
-	while(wait) { \
-		msleep(500); \
-	} \
-	if (DEBUG) printk(KERN_ALERT "wait done\n");
+int in, mid, out;
+static void pwait(struct mutex mtx) {
+
+	// queue any threads beyond two
+	mutex_lock(&mtx);
+	in++;
+	mutex_unlock(&mtx);
+	while (1) {
+		mutex_lock(&mtx);
+		if (in <= 2) {
+			mutex_unlock(&mtx);
+			break;
+		}
+		mutex_unlock(&mtx);
+		msleep(HALF_SEC);
+	}
+
+	// wait for two threads to queue up
+	mutex_lock(&mtx);
+	mid++;
+	mutex_unlock(&mtx);
+	while (1) {
+		mutex_lock(&mtx);
+		if (mid == 2) {
+			mutex_unlock(&mtx);
+			break;
+		}
+		mutex_unlock(&mtx);
+		msleep(HALF_SEC);
+	}
+
+	// wait two threads to leave, reset counts
+	mutex_lock(&mtx);
+	out++;
+	if (out == 2) {
+		in -= 2;
+		mid = 0;
+		out = 0;
+	}
+	mutex_unlock(&mtx);
+}
 
 int fifo_open(struct inode* inode, struct file* filp)
 {
@@ -273,7 +299,10 @@ static int __init fifo_init(void)
 	fifo_start = &fifo[0];
 	fifo_end = &fifo[MAX_DATA-1];
 
-	wait = 0;
+	// pwait()
+	in = 0;
+	mid = 0;
+	out = 0;
 
 	/* defaults, tested by cleanup() */
 	fifo_major = 0;
