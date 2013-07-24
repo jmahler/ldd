@@ -83,7 +83,7 @@ int fifo_open(struct inode* inode, struct file* filp)
 {
 	struct fifo_dev *fifo_devp;
 
-	if (DEBUG) printk(KERN_ALERT "fifo_open()\n");
+	if (DEBUG > 1) printk(KERN_ALERT "fifo_open()\n");
 
 	fifo_devp = container_of(inode->i_cdev, struct fifo_dev, cdev);
 
@@ -136,7 +136,7 @@ ssize_t fifo_read(struct file *filp, char __user *buf, size_t count,
 	left = count;
 
 	if (DEBUG) printk(KERN_ALERT "fifo_read(%zu)\n", count);
-	if (DEBUG) printk(KERN_ALERT "  offset, read, write: %zu, %zu\n",
+	if (DEBUG) printk(KERN_ALERT "  pre-offsets; read, write: %zu, %zu\n",
 										read_ptr - fifo_start,
 										write_ptr - fifo_start);
 
@@ -155,7 +155,7 @@ ssize_t fifo_read(struct file *filp, char __user *buf, size_t count,
 
 		pwait(read_mtx);
 
-		if (DEBUG) printk(KERN_ALERT "  to read: %zu\n", cnt);
+		if (DEBUG) printk(KERN_ALERT "  read: %zu\n", cnt);
 
 		if (copy_to_user(buf, (void *) read_ptr, cnt) != 0) {
 			return -EIO;
@@ -176,7 +176,7 @@ ssize_t fifo_read(struct file *filp, char __user *buf, size_t count,
 
 		pwait(read_mtx);
 
-		if (DEBUG) printk(KERN_ALERT "  read_offset: %zu\n",
+		if (DEBUG) printk(KERN_ALERT "  new read offset: %zu\n",
 											read_ptr - fifo_start);
 	}
 
@@ -190,7 +190,7 @@ ssize_t fifo_write(struct file *filp, const char __user *buf, size_t count,
 	size_t left;
 
 	if (DEBUG) printk(KERN_ALERT "fifo_write(%zu)\n", count);
-	if (DEBUG) printk(KERN_ALERT "  offset, read, write: %zu, %zu\n",
+	if (DEBUG) printk(KERN_ALERT "  pre-offsets; read, write: %zu, %zu\n",
 										read_ptr - fifo_start,
 										write_ptr - fifo_start);
 
@@ -236,7 +236,7 @@ ssize_t fifo_write(struct file *filp, const char __user *buf, size_t count,
 			write_ptr = fifo_start;
 
 		pwait(write_mtx);
-		if (DEBUG) printk(KERN_ALERT "  write offset: %zu\n",
+		if (DEBUG) printk(KERN_ALERT "  new write offset: %zu\n",
 										write_ptr - fifo_start);
 	}
 
@@ -245,7 +245,7 @@ ssize_t fifo_write(struct file *filp, const char __user *buf, size_t count,
 
 int fifo_release(struct inode *inode, struct file *filp)
 {
-	if (DEBUG) printk(KERN_ALERT "fifo_release()\n");
+	if (DEBUG > 1) printk(KERN_ALERT "fifo_release()\n");
 
 	return 0;
 }
@@ -260,30 +260,30 @@ struct file_operations fifo_fops = {
 
 static void fifo_cleanup(void)
 {
-	if (DEBUG) printk(KERN_ALERT "fifo_cleanup()\n");
+	if (DEBUG > 1) printk(KERN_ALERT "fifo_cleanup()\n");
 
 	if (fifo_major) {
-		if (DEBUG) printk(KERN_ALERT "fifo: unregister_chrdev_region()\n");
+		if (DEBUG > 1) printk(KERN_ALERT "fifo: unregister_chrdev_region()\n");
 		unregister_chrdev_region(fifo_major, 1);
 	}
 
 	if (fifo_device) {
-		if (DEBUG) printk(KERN_ALERT "fifo: device_destroy()\n");
+		if (DEBUG > 1) printk(KERN_ALERT "fifo: device_destroy()\n");
 		device_destroy(fifo_class, fifo_major);
 	}
 
 	if (cdev_add_done) {
-		if (DEBUG) printk(KERN_ALERT "fifo: cdev_del()\n");
+		if (DEBUG > 1) printk(KERN_ALERT "fifo: cdev_del()\n");
 		cdev_del(&fifo_devp->cdev);
 	}
 
 	if (fifo_devp) {
-		if (DEBUG) printk(KERN_ALERT "fifo: kfree()\n");
+		if (DEBUG > 1) printk(KERN_ALERT "fifo: kfree()\n");
 		kfree(fifo_devp);
 	}
 
 	if (fifo_class) {
-		if (DEBUG) printk(KERN_ALERT "fifo: class_destroy()\n");
+		if (DEBUG > 1) printk(KERN_ALERT "fifo: class_destroy()\n");
 		class_destroy(fifo_class);
 	}
 }
@@ -292,7 +292,7 @@ static int __init fifo_init(void)
 {
 	int err = 0;
 
-	if (DEBUG) printk(KERN_ALERT "fifo_init()\n");
+	if (DEBUG > 1) printk(KERN_ALERT "fifo_init()\n");
 
 	read_ptr = &fifo[0];
 	write_ptr = &fifo[0];
@@ -352,7 +352,7 @@ out:
 
 static void __exit fifo_exit(void)
 {
-	if (DEBUG) printk(KERN_ALERT "fifo_exit()\n");
+	if (DEBUG > 1) printk(KERN_ALERT "fifo_exit()\n");
 
 	fifo_cleanup();
 }
