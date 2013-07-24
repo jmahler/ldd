@@ -1,6 +1,6 @@
 
 #define DEVICE_NAME "fifo"
-#define MAX_DATA 128
+#define MAX_DATA 3
 
 #include <linux/cdev.h>
 #include <linux/delay.h>
