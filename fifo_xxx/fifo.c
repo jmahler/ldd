@@ -140,6 +140,11 @@ ssize_t fifo_read(struct file *filp, char __user *buf, size_t count,
 										read_ptr - fifo_start,
 										write_ptr - fifo_start);
 
+	if (read_ptr == write_ptr) {
+		if (DEBUG) printk(KERN_ALERT "  fifo empty\n");
+		return 0;
+	}
+
 	while (left && read_ptr != write_ptr) {
 
 		if (write_ptr > read_ptr) {
@@ -205,8 +210,10 @@ ssize_t fifo_write(struct file *filp, const char __user *buf, size_t count,
 			cnt = fifo_end - write_ptr;
 		} else { // write_ptr < read_ptr
 			cnt = (read_ptr - 1) - write_ptr;
-			if (0 == cnt)
+			if (0 == cnt) {
+				if (DEBUG) printk(KERN_ALERT "  fifo full\n");
 				break;
+			}
 		}
 
 		pwait(write_mtx);
