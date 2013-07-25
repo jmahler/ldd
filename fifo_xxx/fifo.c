@@ -20,16 +20,16 @@ static int cdev_add_done;
 
 struct fifo_dev {
 	struct cdev cdev;
+	char fifo[MAX_DATA];
+	char *read_ptr;
+	char *write_ptr;
+	char *fifo_start;
+	char *fifo_end;
+	int empty;
 } *fifo_devp;
 
 struct class *fifo_class;
 struct device *fifo_device;
-
-char fifo[MAX_DATA];
-char *read_ptr;
-char *write_ptr;
-char *fifo_start;
-char *fifo_end;
 
 static DEFINE_MUTEX(read_mtx);
 static DEFINE_MUTEX(write_mtx);
@@ -128,57 +128,53 @@ int fifo_open(struct inode* inode, struct file* filp)
 ssize_t fifo_read(struct file *filp, char __user *buf, size_t count,
 					loff_t *f_pos)
 {
-	size_t cnt;
 	size_t left;
 
-	left = count;
+	struct fifo_dev *fifo_devp = filp->private_data;
+	char *read_ptr = fifo_devp->read_ptr;
+	char *write_ptr = fifo_devp->write_ptr;
+	char *fifo_start = fifo_devp->fifo_start;
+	char *fifo_end = fifo_devp->fifo_end;
+	int *empty = &(fifo_devp->empty);
 
 	if (DEBUG) printk(KERN_ALERT "fifo_read(%zu)\n", count);
 	if (DEBUG) printk(KERN_ALERT "  pre-offsets; read, write: %zu, %zu\n",
 										read_ptr - fifo_start,
 										write_ptr - fifo_start);
-	if (read_ptr == write_ptr) {
-		if (DEBUG) printk(KERN_ALERT "  fifo empty\n");
-		return 0;
-	}
+	left = count;
 
-	while (left && read_ptr != write_ptr) {
+	while (left) {
 
-		if (write_ptr > read_ptr) {
-			cnt = write_ptr - read_ptr;
-		} else {
-			cnt = fifo_end - read_ptr;
+		if (*empty) {
+			if (DEBUG) printk(KERN_ALERT "  fifo empty\n");
+			break;
 		}
 
 		pwait(read_mtx);
 
-		if (cnt > left)
-			cnt = left;
-
-		pwait(read_mtx);
-
-		if (DEBUG) printk(KERN_ALERT "  read: %zu\n", cnt);
-
-		if (copy_to_user(buf, (void *) read_ptr, cnt) != 0) {
+		if (copy_to_user(buf, (void *) read_ptr, 1) != 0) {
 			return -EIO;
 		}
+		left--;
 
 		pwait(read_mtx);
 
-		buf += cnt;
-		pwait(read_mtx);
-		left -= cnt;
-		pwait(read_mtx);
-		read_ptr += cnt;
-
-		pwait(read_mtx);
-
-		if (read_ptr == fifo_end)
+		if (read_ptr == fifo_end) {
 			read_ptr = fifo_start;
+			pwait(read_mtx);
+			fifo_devp->read_ptr = fifo_start;
+		} else {
+			read_ptr++;
+			pwait(read_mtx);
+			fifo_devp->read_ptr++;
+		}
 
-		pwait(read_mtx);
+			pwait(read_mtx);
+		if (read_ptr == write_ptr) {
+			*empty = 1;
+		}
 
-		if (DEBUG) printk(KERN_ALERT "  new read offset: %zu\n",
+		if (DEBUG) printk(KERN_ALERT "  post read offset: %zu\n",
 											read_ptr - fifo_start);
 	}
 
@@ -188,59 +184,50 @@ ssize_t fifo_read(struct file *filp, char __user *buf, size_t count,
 ssize_t fifo_write(struct file *filp, const char __user *buf, size_t count,
 					loff_t *f_pos)
 {
-	size_t cnt;
 	size_t left;
+
+	struct fifo_dev *fifo_devp = filp->private_data;
+	char *read_ptr = fifo_devp->read_ptr;
+	char *write_ptr = fifo_devp->write_ptr;
+	char *fifo_start = fifo_devp->fifo_start;
+	char *fifo_end = fifo_devp->fifo_end;
+	int *empty = &(fifo_devp->empty);
 
 	if (DEBUG) printk(KERN_ALERT "fifo_write(%zu)\n", count);
 	if (DEBUG) printk(KERN_ALERT "  pre-offsets; read, write: %zu, %zu\n",
 										read_ptr - fifo_start,
 										write_ptr - fifo_start);
-
 	left = count;
 
 	while (left) {
 
-		if ( (write_ptr == fifo_end) && (read_ptr == fifo_start) ) {
-			/* loop end to beginning, full, write_ptr < read_ptr */
+		if (!(*empty) && (read_ptr == write_ptr)) {
+			if (DEBUG) printk(KERN_ALERT "  fifo full\n");
 			break;
-		} else if (write_ptr >= read_ptr) {
-			cnt = fifo_end - write_ptr;
-		} else { // write_ptr < read_ptr
-			cnt = (read_ptr - 1) - write_ptr;
-			if (0 == cnt) {
-				if (DEBUG) printk(KERN_ALERT "  fifo full\n");
-				break;
-			}
 		}
 
-		pwait(write_mtx);
-
-		if (cnt > left)
-			cnt = left;
-
-		pwait(write_mtx);
-
-		if (DEBUG) printk(KERN_ALERT "  write: %zu\n", cnt);
-
-		if (copy_from_user((void *) write_ptr, buf, cnt) != 0) {
+		if (copy_from_user((void *) write_ptr, buf, 1) != 0) {
 			return -EIO;
 		}
+		left--;
+
+		if (*empty) {
+			*empty = 0;
+		}
 
 		pwait(write_mtx);
 
-		buf += cnt;
-		pwait(write_mtx);
-		left -= cnt;
-		pwait(write_mtx);
-		write_ptr += cnt;
-		pwait(write_mtx);
-
-		/* reset to begining if we reach the end */
-		if (write_ptr == fifo_end)
+		if (write_ptr == fifo_end) {
 			write_ptr = fifo_start;
+			pwait(write_mtx);
+			fifo_devp->write_ptr = fifo_start;
+		} else {
+			write_ptr++;
+			pwait(write_mtx);
+			fifo_devp->write_ptr++;
+		}
 
-		pwait(write_mtx);
-		if (DEBUG) printk(KERN_ALERT "  new write offset: %zu\n",
+		if (DEBUG) printk(KERN_ALERT "  post write offset: %zu\n",
 										write_ptr - fifo_start);
 	}
 
@@ -287,16 +274,6 @@ static int __init fifo_init(void)
 {
 	int err = 0;
 
-	read_ptr = &fifo[0];
-	write_ptr = &fifo[0];
-	fifo_start = &fifo[0];
-	fifo_end = &fifo[MAX_DATA-1];
-
-	// pwait()
-	in = 0;
-	mid = 0;
-	out = 0;
-
 	/* defaults, tested by cleanup() */
 	fifo_major = 0;
 	fifo_class = NULL;
@@ -323,6 +300,13 @@ static int __init fifo_init(void)
 
 	cdev_init(&fifo_devp->cdev, &fifo_fops);
 	fifo_devp->cdev.owner = THIS_MODULE;
+
+	fifo_devp->fifo_start = &fifo_devp->fifo[0];
+	fifo_devp->fifo_end = &fifo_devp->fifo[MAX_DATA-1];
+	fifo_devp->read_ptr = &fifo_devp->fifo[0];
+	fifo_devp->write_ptr = &fifo_devp->fifo[0];
+	fifo_devp->empty = 1;
+
 	err = cdev_add(&fifo_devp->cdev, fifo_major, 1);
 	if (err) {
 		printk(KERN_WARNING "cdev_add failed\n");
