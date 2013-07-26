@@ -33,22 +33,22 @@ using the `diff` command.
 
 The following is an overview of the drivers in this project:
 
- - [Hello, World](#hello)
+ - [Hello, World](#hello-world)
   - hello - "Hello, World" driver, prints a message on load/unload
   - param - takes a parameter, number of message to print
- - [Read/Write Data](#rwdata)
+ - [Read/Write Data](#readwrite-data)
   - data\_chr - character device create (load/unload)
   - data\_rw - read/write
   - data\_sk - seek-able read/write
   - ioctlx - read/write value using ioctl()
   - null - /dev/null char device
   - zero - /dev/zero char device
- - [Concurrency](#conc)
+ - [Concurrency](#concurrency)
   - fifo\_rw - read/write fifo, similar to data\_rw
   - fifo\_xxx - create race conditions that break the fifo
   - fifo\_fix - (in development) how to fix the race conditions using mutexes
 
-### Hello, World<a id="hello"></a>
+### Hello, World<a id="hello-world"></a>
 
 The **hello** module simply prints a message on load/unload.
 
@@ -105,7 +105,7 @@ from the *hello* driver take the `diff`.
 	 module_init(hello_init);
 	jeri@hudson:~/ldd/param$ 
 
-### Read/Write Data<a id="rwdata"></a>
+### Read/Write Data<a id="readwrite-data"></a>
 
 The *data* driver simply provides a memory region that can be
 read from and written to.
@@ -125,7 +125,7 @@ the familiar `/dev/null` and `/dev/zero` devices.
 Actually the are named `/dev/null0` and `/dev/zero0` to avoid
 conflicts, but they behave the same.
 
-### Concurrency<a id="conc"></a>
+### Concurrency<a id="concurrency"></a>
 
 The drivers up to this point have ignored the problems associated
 with concurrency such as race conditions.
