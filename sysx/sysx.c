@@ -36,7 +36,7 @@ static struct attribute_group attr_group = {
 	.attrs = attrs,
 };
 
-static struct kobject *kobj;
+struct kobject *kobj;
 
 static int __init sysx_init(void)
 {
