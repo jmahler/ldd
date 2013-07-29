@@ -43,6 +43,7 @@ The following is an overview of the drivers in this project:
   - ioctlx - read/write value using ioctl()
   - null - /dev/null char device
   - zero - /dev/zero char device
+  - sysx - read/write using a files in /sys (sysfs, kobject)
  - [Concurrency](#concurrency)
   - fifo\_rw - read/write fifo, similar to data\_rw
   - fifo\_xxx - create race conditions that break the fifo
@@ -124,6 +125,16 @@ The **null** and **zero** drivers show how to construct
 the familiar `/dev/null` and `/dev/zero` devices.
 Actually the are named `/dev/null0` and `/dev/zero0` to avoid
 conflicts, but they behave the same.
+
+The **sysx** example is not a char driver but instead allows
+a single value to be read/written to a file in /sys/
+
+	jeri@hudson:~/ldd/sysx$ sudo insmod sysx.ko
+	jeri@hudson:~/ldd/sysx$ cat /sys/kernel/sysx/x
+	0
+	jeri@hudson:~/ldd/sysx$ echo "10" > /sys/kernel/sysx/x
+	jeri@hudson:~/ldd/sysx$ cat /sys/kernel/sysx/x
+	10
 
 ### Concurrency<a id="concurrency"></a>
 
