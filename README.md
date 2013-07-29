@@ -43,7 +43,8 @@ The following is an overview of the drivers in this project:
   - ioctlx - read/write value using ioctl()
   - null - /dev/null char device
   - zero - /dev/zero char device
-  - sysx - read/write using a files in /sys (sysfs, kobject)
+  - sysx\_file - read/write using a files in /sys (sysfs, kobject, sysfs\_create\_file)
+  - sysx\_group - read/write using a files in /sys (sysfs\_create\_group)
  - [Concurrency](#concurrency)
   - fifo\_rw - read/write fifo, similar to data\_rw
   - fifo\_xxx - create race conditions that break the fifo
@@ -126,15 +127,50 @@ the familiar `/dev/null` and `/dev/zero` devices.
 Actually the are named `/dev/null0` and `/dev/zero0` to avoid
 conflicts, but they behave the same.
 
-The **sysx** example is not a char driver but instead allows
-a single value to be read/written to a file in /sys/
+The **sysx\_** examples are not a char drivers but instead allow
+modification of a value through a file (attribute) in /sys (sysfs).
 
-	jeri@hudson:~/ldd/sysx$ sudo insmod sysx.ko
-	jeri@hudson:~/ldd/sysx$ cat /sys/kernel/sysx/x
+	jeri@hudson:~/ldd/sysx_file$ sudo insmod sysx.ko
+	jeri@hudson:~/ldd/sysx_file$ cat /sys/kernel/sysx/x
 	0
-	jeri@hudson:~/ldd/sysx$ echo "10" > /sys/kernel/sysx/x
-	jeri@hudson:~/ldd/sysx$ cat /sys/kernel/sysx/x
+	jeri@hudson:~/ldd/sysx_file$ echo "10" > /sys/kernel/sysx/x
+	jeri@hudson:~/ldd/sysx_file$ cat /sys/kernel/sysx/x
 	10
+
+There are various ways to use kobjects and sysfs.
+**sysx\_file** uses `sysfs_create_file()` and **sysx\_group** uses
+`sysfs_create_group()`.
+
+	jeri@hudson:~/notes/ldd/sysx_file$ diff -u sysx.c ../sysx_group/sysx.c 
+	--- sysx.c	2013-07-28 21:36:51.082238028 -0700
+	+++ ../sysx_group/sysx.c	2013-07-28 21:30:16.186256982 -0700
+	@@ -27,6 +27,15 @@
+	 static struct kobj_attribute x_attribute =
+		__ATTR(x, 0666, x_show, x_store);
+	 
+	+static struct attribute *attrs[] = {
+	+	&x_attribute.attr,
+	+	NULL,
+	+};
+	+
+	+static struct attribute_group attr_group = {
+	+	.attrs = attrs,
+	+};
+	+
+	 struct kobject *kobj;
+	 
+	 static int __init sysx_init(void)
+	@@ -45,8 +54,7 @@
+			return -ENOMEM;
+	 
+		/* /sys/kernel/sysx/x */
+	-	ret = sysfs_create_file(kobj, &x_attribute.attr);
+	-
+	+	ret = sysfs_create_group(kobj, &attr_group);
+		if (ret)
+			kobject_put(kobj);
+	 
+	jeri@hudson:~/notes/ldd/sysx_file$
 
 ### Concurrency<a id="concurrency"></a>
 
