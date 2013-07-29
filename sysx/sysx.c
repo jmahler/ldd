@@ -9,6 +9,7 @@
 
 static int x;
 
+/* operations to read (x_show) and write (x_store) the file for 'x' in /sys */
 static ssize_t x_show(struct kobject *kobj, struct kobj_attribute *attr,
 						char *buf)
 {
@@ -22,6 +23,7 @@ static ssize_t x_store(struct kobject *kobj, struct kobj_attribute *attr,
 	return count;
 }
 
+/* "attributes" refer to files in kobject lingo */
 static struct kobj_attribute x_attribute =
 	__ATTR(x, 0666, x_show, x_store);
 
@@ -40,10 +42,18 @@ static int __init sysx_init(void)
 {
 	int ret;
 
+	/*
+	 * /sys/kernel/sysx
+	 *        |     |
+	 *        |    "sysx"
+	 *        |
+	 *       kernel_'kobj'
+	 */
 	kobj = kobject_create_and_add("sysx", kernel_kobj);
 	if (!kobj)
 		return -ENOMEM;
 
+	/* /sys/kernel/sysx/x */
 	ret = sysfs_create_group(kobj, &attr_group);
 	if (ret)
 		kobject_put(kobj);
