@@ -79,45 +79,38 @@ ssize_t fifo_read(struct file *filp, char __user *buf, size_t count,
 {
 	size_t left;
 
-	struct fifo_dev *fifo_devp = filp->private_data;
-	char *read_ptr = fifo_devp->read_ptr;
-	char *write_ptr = fifo_devp->write_ptr;
-	char *fifo_start = fifo_devp->fifo_start;
-	char *fifo_end = fifo_devp->fifo_end;
-	int *empty = &(fifo_devp->empty);
+	struct fifo_dev *dev = filp->private_data;
 
 	if (DEBUG) printk(KERN_ALERT "fifo_read(%zu)\n", count);
 	if (DEBUG) printk(KERN_ALERT "  pre-offsets; read, write: %zu, %zu\n",
-										read_ptr - fifo_start,
-										write_ptr - fifo_start);
+										dev->read_ptr - dev->fifo_start,
+										dev->write_ptr - dev->fifo_start);
 	left = count;
 
 	while (left) {
 
-		if (*empty) {
+		if (dev->empty) {
 			if (DEBUG) printk(KERN_ALERT "  fifo empty\n");
 			break;
 		}
 
-		if (copy_to_user(buf, (void *) read_ptr, 1) != 0) {
+		if (copy_to_user(buf, (void *) dev->read_ptr, 1) != 0) {
 			return -EIO;
 		}
 		left--;
 
-		if (read_ptr == fifo_end) {
-			read_ptr = fifo_start;
-			fifo_devp->read_ptr = fifo_start;
+		if (dev->read_ptr == dev->fifo_end) {
+			dev->read_ptr = dev->fifo_start;
 		} else {
-			read_ptr++;
-			fifo_devp->read_ptr++;
+			(dev->read_ptr)++;
 		}
 
-		if (read_ptr == write_ptr) {
-			*empty = 1;
+		if (dev->read_ptr == dev->write_ptr) {
+			dev->empty = 1;
 		}
 
 		if (DEBUG) printk(KERN_ALERT "  post read offset: %zu\n",
-											read_ptr - fifo_start);
+											dev->read_ptr - dev->fifo_start);
 	}
 
 	return (count - left);
@@ -128,45 +121,37 @@ ssize_t fifo_write(struct file *filp, const char __user *buf, size_t count,
 {
 	size_t left;
 
-	struct fifo_dev *fifo_devp = filp->private_data;
-	char *read_ptr = fifo_devp->read_ptr;
-	char *write_ptr = fifo_devp->write_ptr;
-	char *fifo_start = fifo_devp->fifo_start;
-	char *fifo_end = fifo_devp->fifo_end;
-	int *empty = &(fifo_devp->empty);
+	struct fifo_dev *dev = filp->private_data;
 
 	if (DEBUG) printk(KERN_ALERT "fifo_write(%zu)\n", count);
 	if (DEBUG) printk(KERN_ALERT "  pre-offsets; read, write: %zu, %zu\n",
-										read_ptr - fifo_start,
-										write_ptr - fifo_start);
+										dev->read_ptr - dev->fifo_start,
+										dev->write_ptr - dev->fifo_start);
 	left = count;
 
 	while (left) {
 
-		if (!(*empty) && (read_ptr == write_ptr)) {
+		if (!(dev->empty) && (dev->read_ptr == dev->write_ptr)) {
 			if (DEBUG) printk(KERN_ALERT "  fifo full\n");
 			break;
 		}
 
-		if (copy_from_user((void *) write_ptr, buf, 1) != 0) {
+		if (copy_from_user((void *) dev->write_ptr, buf, 1) != 0) {
 			return -EIO;
 		}
 		left--;
 
-		if (*empty) {
-			*empty = 0;
-		}
+		if (dev->empty)
+			dev->empty = 0;
 
-		if (write_ptr == fifo_end) {
-			write_ptr = fifo_start;
-			fifo_devp->write_ptr = fifo_start;
+		if (dev->write_ptr == dev->fifo_end) {
+			dev->write_ptr = dev->fifo_start;
 		} else {
-			write_ptr++;
-			fifo_devp->write_ptr++;
+			(dev->write_ptr)++;
 		}
 
 		if (DEBUG) printk(KERN_ALERT "  post write offset: %zu\n",
-										write_ptr - fifo_start);
+										dev->write_ptr - dev->fifo_start);
 	}
 
 	return (count - left);
