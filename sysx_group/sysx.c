@@ -8,6 +8,7 @@
 #include <linux/sysfs.h>
 
 static int x;
+static int y;
 
 /* operations to read (x_show) and write (x_store) the file for 'x' in /sys */
 static ssize_t x_show(struct kobject *kobj, struct kobj_attribute *attr,
@@ -27,9 +28,29 @@ static ssize_t x_store(struct kobject *kobj, struct kobj_attribute *attr,
 static struct kobj_attribute x_attribute =
 	__ATTR(x, 0666, x_show, x_store);
 
+
+static ssize_t y_show(struct kobject *kobj, struct kobj_attribute *attr,
+						char *buf)
+{
+	return sprintf(buf, "%d\n", y);
+}
+
+static ssize_t y_store(struct kobject *kobj, struct kobj_attribute *attr,
+						const char *buf, size_t count)
+{
+	sscanf(buf, "%du", &y);
+	return count;
+}
+
+/* "attributes" refer to files in kobject lingo */
+static struct kobj_attribute y_attribute =
+	__ATTR(y, 0666, y_show, y_store);
+
+
 static struct attribute *attrs[] = {
 	&x_attribute.attr,
-	NULL,
+	&y_attribute.attr,
+	NULL,  // terminate list
 };
 
 static struct attribute_group attr_group = {

@@ -43,8 +43,9 @@ The following is an overview of the drivers in this project:
   - ioctlx - read/write value using ioctl()
   - null - /dev/null char device
   - zero - /dev/zero char device
-  - sysx\_file - read/write using a files in /sys (sysfs, kobject, sysfs\_create\_file)
-  - sysx\_group - read/write using a files in /sys (sysfs\_create\_group)
+ - [Sysfs](#sysfs)
+  - sysx\_file - read/write a single file in sysfs
+  - sysx\_group - read/write a group of files in sysfs
  - [Concurrency](#concurrency)
   - fifo\_rw - read/write fifo, similar to data\_rw
   - fifo\_xxx - create race conditions that break the fifo
@@ -69,7 +70,7 @@ of times the message is printed.
 And to see what changes were need to construct the *param* driver
 from the *hello* driver take the `diff`.
 
-	jeri@hudson:~/ldd/param$ diff -u ../hello/hello.c hello.c
+	~/ldd/param$ diff -u ../hello/hello.c hello.c
 	--- ../hello/hello.c	2013-07-25 23:21:16.478135138 -0700
 	+++ hello.c	2013-07-25 23:22:30.606131580 -0700
 	@@ -1,16 +1,30 @@
@@ -105,7 +106,7 @@ from the *hello* driver take the `diff`.
 	 }
 	 
 	 module_init(hello_init);
-	jeri@hudson:~/ldd/param$ 
+	~/ldd/param$ 
 
 ### Read/Write Data<a id="readwrite-data"></a>
 
@@ -130,47 +131,33 @@ conflicts, but they behave the same.
 The **sysx\_** examples are not a char drivers but instead allow
 modification of a value through a file (attribute) in /sys (sysfs).
 
-	jeri@hudson:~/ldd/sysx_file$ sudo insmod sysx.ko
-	jeri@hudson:~/ldd/sysx_file$ cat /sys/kernel/sysx/x
+	~/ldd/sysx_file$ sudo insmod sysx.ko
+	~/ldd/sysx_file$ cat /sys/kernel/sysx/x
 	0
-	jeri@hudson:~/ldd/sysx_file$ echo "10" > /sys/kernel/sysx/x
-	jeri@hudson:~/ldd/sysx_file$ cat /sys/kernel/sysx/x
+	~/ldd/sysx_file$ echo "10" > /sys/kernel/sysx/x
+	~/ldd/sysx_file$ cat /sys/kernel/sysx/x
 	10
 
-There are various ways to use kobjects and sysfs.
-**sysx\_file** uses `sysfs_create_file()` and **sysx\_group** uses
-`sysfs_create_group()`.
+### Sysfs<a id="sysfs"></a>
 
-	jeri@hudson:~/notes/ldd/sysx_file$ diff -u sysx.c ../sysx_group/sysx.c 
-	--- sysx.c	2013-07-28 21:36:51.082238028 -0700
-	+++ ../sysx_group/sysx.c	2013-07-28 21:30:16.186256982 -0700
-	@@ -27,6 +27,15 @@
-	 static struct kobj_attribute x_attribute =
-		__ATTR(x, 0666, x_show, x_store);
-	 
-	+static struct attribute *attrs[] = {
-	+	&x_attribute.attr,
-	+	NULL,
-	+};
-	+
-	+static struct attribute_group attr_group = {
-	+	.attrs = attrs,
-	+};
-	+
-	 struct kobject *kobj;
-	 
-	 static int __init sysx_init(void)
-	@@ -45,8 +54,7 @@
-			return -ENOMEM;
-	 
-		/* /sys/kernel/sysx/x */
-	-	ret = sysfs_create_file(kobj, &x_attribute.attr);
-	-
-	+	ret = sysfs_create_group(kobj, &attr_group);
-		if (ret)
-			kobject_put(kobj);
-	 
-	jeri@hudson:~/notes/ldd/sysx_file$
+Sysfs (/sys/) provides a mechanisim for accessing kernel objects
+(kobject) as files.  Internal values can be read from files and
+configuration options can be set by writing to these files.
+
+The *sysx_file* example shows how to create a file in sysfs which can
+read and write an internal integer variable.
+
+The *sysx_group* example shows how to create a group of files which can
+be read and written.
+
+	~/ldd/sysx_group$ sudo insmod sysx.ko
+	~/ldd/sysx_group$ ls /sys/kernel/sysx/
+	x  y
+	~/ldd/sysx_group$ cat /sys/kernel/sysx/y
+	0
+	~/ldd/sysx_group$ echo "1" > /sys/kernel/sysx/y
+	~/ldd/sysx_group$ cat /sys/kernel/sysx/y
+	1
 
 ### Concurrency<a id="concurrency"></a>
 
@@ -182,13 +169,13 @@ from and written to.  It does not handle concurrency but if
 each read/write is completed before another is started it
 will work as expected.
 
-	jeri@hudson:~/ldd/fifo_rw$ sudo insmod fifo.ko
-	jeri@hudson:~/ldd/fifo_rw$ cd test/
+	~/ldd/fifo_rw$ sudo insmod fifo.ko
+	~/ldd/fifo_rw$ cd test/
 
 Several test programs are included that read and write numbers.
 
-	jeri@hudson:~/ldd/fifo_rw/test$ sudo ./fifow 1 2
-	jeri@hudson:~/ldd/fifo_rw/test$ sudo ./fifor
+	~/ldd/fifo_rw/test$ sudo ./fifow 1 2
+	~/ldd/fifo_rw/test$ sudo ./fifor
 	1
 	2
 
@@ -196,23 +183,23 @@ And the values that were written were correctly read out.
 With the DEBUG parameter the calculated offsets in the circular
 buffer used for the FIFO will be displayed.
 
-	jeri@hudson:~/ldd/fifo_rw$ sudo insmod fifo.ko DEBUG=1
+	~/ldd/fifo_rw$ sudo insmod fifo.ko DEBUG=1
 
 The **fifo_xxx** driver adds code which magnifies concurrency
 issues by waiting for two threads to reach a given point
 before proceeding.  As the processes race against each other,
 share data becomes out of sync, and havoc ensues.
 
-	jeri@hudson:~/ldd/fifo_xxx$ sudo insmod fifo.ko DEBUG=1
+	~/ldd/fifo_xxx$ sudo insmod fifo.ko DEBUG=1
 
 With this driver two processes must be run.
 
-	jeri@hudson:~/ldd/fifo_xxx/test$ sudo ./fifow 1 &
-	jeri@hudson:~/ldd/fifo_xxx/test$ sudo ./fifow 2 &
+	~/ldd/fifo_xxx/test$ sudo ./fifow 1 &
+	~/ldd/fifo_xxx/test$ sudo ./fifow 2 &
 	(bad things may happen)
 
-	jeri@hudson:~/ldd/fifo_xxx/test$ sudo ./fifor &
-	jeri@hudson:~/ldd/fifo_xxx/test$ sudo ./fifor &
+	~/ldd/fifo_xxx/test$ sudo ./fifor &
+	~/ldd/fifo_xxx/test$ sudo ./fifor &
 	(more havoc)
 
 Various problems may happen.  The read/write pointers

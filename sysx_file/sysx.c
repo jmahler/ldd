@@ -46,7 +46,6 @@ static int __init sysx_init(void)
 
 	/* /sys/kernel/sysx/x */
 	ret = sysfs_create_file(kobj, &x_attribute.attr);
-
 	if (ret)
 		kobject_put(kobj);
 
