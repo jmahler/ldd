@@ -42,10 +42,9 @@ int fifo_open(struct inode* inode, struct file* filp)
 
 /*
  * The fifo is implemented using a cirular buffer.
- * It is empty when the read and write pointers are the same.
- * And it is full when the write pointer is just behind the read.
- *
- * Read as much data as possible:
+ * It is empty when empty = 1 and the read/write pointers
+ * are at the same position.  It is empty when empty = 0 and
+ * the read/write pointers are at the same position.
  *
  *             W
  *   +---+---+---+
@@ -53,25 +52,6 @@ int fifo_open(struct inode* inode, struct file* filp)
  *   +---+---+---+
  *     R
  *     
- *             W
- *   +---+---+---+
- *   |   |   |   |
- *   +---+---+---+
- *         R
- *
- *             W
- *   +---+---+---+
- *   |   |   |   |
- *   +---+---+---+
- *             R
- *
- * Write a new value:
- *
- *     W
- *   +---+---+---+
- *   |   |   |   |
- *   +---+---+---+
- *             R
  */
 
 ssize_t fifo_read(struct file *filp, char __user *buf, size_t count,
