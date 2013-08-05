@@ -1,0 +1,11 @@
+
+sysx_ktype2/BUGS
+
+Mon, 05 Aug 2013 00:46:30 -0700
+
+  - Does not create /sys/kernel/sysx or any of the attributes.
+
+Mon, 05 Aug 2013 00:46:30 -0700
+
+  - Needs a release function.
+
