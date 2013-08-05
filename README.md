@@ -47,7 +47,7 @@ The following is an overview of the drivers in this project:
   - sysx\_file - read/write a single file (attribute) in sysfs
   - sysx\_file2 - read/write a two files in sysfs
   - sysx\_group - equivalent of sysx\_file2 using `sysfs_create_group()`.
-  - sysx\_type - creating many similar (show, store) attributes using types
+  - sysx\_ktype - use kobj\_ktype to define default sysfs operations
  - [Concurrency](#concurrency)
   - fifo\_rw - read/write fifo, similar to data\_rw
   - fifo\_xxx - create race conditions that break the fifo
@@ -163,6 +163,9 @@ multiple variables and files.
 
 The *sysx_group* example shows accomplish the equivalent of *sysx_file2*
 using the `sysfs_create_group()` function.
+
+The *sysx_ktype* example shows how to define default sysfs attribute operations
+using a `kobj_ktype`.
 
 ### Concurrency<a id="concurrency"></a>
 
