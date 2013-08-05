@@ -45,17 +45,6 @@ static struct kobj_attribute y_attribute =
 	__ATTR(y, 0666, y_show, y_store);
 
 
-static struct attribute *attrs[] = {
-	&x_attribute.attr,
-	&y_attribute.attr,
-	NULL,  // terminate list
-};
-
-static struct attribute_group attr_group = {
-	.attrs = attrs,
-};
-
-
 struct kobject *kobj;
 
 static int __init sysx_init(void)
@@ -66,7 +55,11 @@ static int __init sysx_init(void)
 	if (!kobj)
 		return -ENOMEM;
 
-	ret = sysfs_create_group(kobj, &attr_group);
+	ret = sysfs_create_file(kobj, &x_attribute.attr);
+	if (ret)
+		kobject_put(kobj);
+
+	ret = sysfs_create_file(kobj, &y_attribute.attr);
 	if (ret)
 		kobject_put(kobj);
 

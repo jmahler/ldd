@@ -44,8 +44,10 @@ The following is an overview of the drivers in this project:
   - null - /dev/null char device
   - zero - /dev/zero char device
  - [Sysfs](#sysfs)
-  - sysx\_file - read/write a single file in sysfs
-  - sysx\_group - read/write a group of files in sysfs
+  - sysx\_file - read/write a single file (attribute) in sysfs
+  - sysx\_file2 - read/write a two files in sysfs
+  - sysx\_group - equivalent of sysx\_file2 using `sysfs_create_group()`.
+  - sysx\_type - creating many similar (show, store) attributes using types
  - [Concurrency](#concurrency)
   - fifo\_rw - read/write fifo, similar to data\_rw
   - fifo\_xxx - create race conditions that break the fifo
@@ -145,10 +147,10 @@ Sysfs (/sys/) provides a mechanisim for accessing kernel objects
 configuration options can be set by writing to these files.
 
 The *sysx_file* example shows how to create a file in sysfs which can
-read and write an internal integer variable.
+read and write an integer variable in the driver.
 
-The *sysx_group* example shows how to create a group of files which can
-be read and written.
+The *sysx_file2* example expands upon the *sysx_file* example to provide
+multiple variables and files.
 
 	~/ldd/sysx_group$ sudo insmod sysx.ko
 	~/ldd/sysx_group$ ls /sys/kernel/sysx/
@@ -158,6 +160,9 @@ be read and written.
 	~/ldd/sysx_group$ echo "1" > /sys/kernel/sysx/y
 	~/ldd/sysx_group$ cat /sys/kernel/sysx/y
 	1
+
+The *sysx_group* example shows accomplish the equivalent of *sysx_file2*
+using the `sysfs_create_group()` function.
 
 ### Concurrency<a id="concurrency"></a>
 
