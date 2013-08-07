@@ -33,12 +33,17 @@ static ssize_t sysx_xy_store(struct kobject *kobj, struct attribute *attr,
 	return count;
 }
 
+void sysx_xy_release(struct kobject *kobj)
+{
+}
+
 static struct sysfs_ops sysx_sysfs_ops = {
 	.show = sysx_xy_show,
 	.store = sysx_xy_store,
 };
 
 static struct kobj_type sysx_ktype = {
+	.release = sysx_xy_release,
 	.sysfs_ops = &sysx_sysfs_ops,
 };
 
