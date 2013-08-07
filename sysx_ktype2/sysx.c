@@ -38,6 +38,10 @@ static struct sysfs_ops sysx_sysfs_ops = {
 	.store = sysx_xy_store,
 };
 
+static struct kobj_type sysx_ktype = {
+	.sysfs_ops = &sysx_sysfs_ops,
+};
+
 struct attribute x_attr = {
 	.name = "x",
 	.mode = 0666,
@@ -54,9 +58,8 @@ static struct attribute *attrs[] = {
 	NULL,  // terminate list
 };
 
-static struct kobj_type sysx_ktype = {
-	.sysfs_ops = &sysx_sysfs_ops,
-	.default_attrs = attrs,
+static struct attribute_group attr_group = {
+	.attrs = attrs,
 };
 
 struct kobject *kobj;
@@ -71,7 +74,11 @@ static int __init sysx_init(void)
 
 	kobj->ktype = &sysx_ktype;
 
-	ret = kobject_init_and_add(kobj, &sysx_ktype, NULL, "%s", "sysx");
+	ret = kobject_init_and_add(kobj, &sysx_ktype, kernel_kobj, "%s", "sysx");
+	if (ret)
+		kobject_put(kobj);
+
+	ret = sysfs_create_group(kobj, &attr_group);
 	if (ret)
 		kobject_put(kobj);
 

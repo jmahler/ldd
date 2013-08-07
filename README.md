@@ -48,7 +48,7 @@ The following is an overview of the drivers in this project:
   - sysx\_file2 - read/write a two files in sysfs
   - sysx\_group - equivalent of sysx\_file2 using `sysfs_create_group()`.
   - sysx\_ktype - use kobj\_ktype to define default sysfs operations
-  - sysx\_ktype2 - a variation that uses `kobj_type.default_attrs`.
+  - sysx\_ktype2 - uses `kobject_init_and_add` instead of ``kobject_create_and_add`
  - [Concurrency](#concurrency)
   - fifo\_rw - read/write fifo, similar to data\_rw
   - fifo\_xxx - create race conditions that break the fifo
