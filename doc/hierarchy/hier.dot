@@ -1,0 +1,25 @@
+
+digraph ldd {
+	hello;
+	hello -> param;
+
+	data_chr -> data_rw;
+	data_rw -> data_sk;
+
+	data_rw -> zero;
+	data_rw -> null;
+
+	data_rw -> ioctlx;
+
+	data_rw -> fifo_rw;
+	fifo_rw -> fifo_sysfs;
+	fifo_sysfs -> fifo_xxx;
+
+	sysx_file -> sysx_file2;
+	sysx_file2 -> sysx_group;
+	sysx_group -> sysx_ktype;
+	sysx_ktype -> sysx_ktype2;
+
+	sysx_group -> fifo_sysfs;
+}
+
