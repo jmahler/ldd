@@ -51,6 +51,7 @@ The following is an overview of the drivers in this project:
   - sysx\_ktype2 - uses `kobject_init_and_add` instead of ``kobject_create_and_add`
  - [Concurrency](#concurrency)
   - fifo\_rw - read/write fifo, similar to data\_rw
+  - fifo\_sysfs - class attributes (files) in sysfs (/sys/)
   - fifo\_xxx - create race conditions that break the fifo
   - fifo\_fix - (in development) how to fix the race conditions using mutexes
 
@@ -134,11 +135,11 @@ conflicts, but they behave the same.
 The **sysx\_** examples are not a char drivers but instead allow
 modification of a value through a file (attribute) in /sys (sysfs).
 
-	~/ldd/sysx_file$ sudo insmod sysx.ko
-	~/ldd/sysx_file$ cat /sys/kernel/sysx/x
+	sysx_file$ sudo insmod sysx.ko
+	sysx_file$ cat /sys/kernel/sysx/x
 	0
-	~/ldd/sysx_file$ echo "10" > /sys/kernel/sysx/x
-	~/ldd/sysx_file$ cat /sys/kernel/sysx/x
+	sysx_file$ echo "10" > /sys/kernel/sysx/x
+	sysx_file$ cat /sys/kernel/sysx/x
 	10
 
 ### Sysfs<a id="sysfs"></a>
@@ -153,13 +154,13 @@ read and write an integer variable in the driver.
 The *sysx_file2* example expands upon the *sysx_file* example to provide
 multiple variables and files.
 
-	~/ldd/sysx_group$ sudo insmod sysx.ko
-	~/ldd/sysx_group$ ls /sys/kernel/sysx/
+	sysx_group$ sudo insmod sysx.ko
+	sysx_group$ ls /sys/kernel/sysx/
 	x  y
-	~/ldd/sysx_group$ cat /sys/kernel/sysx/y
+	sysx_group$ cat /sys/kernel/sysx/y
 	0
-	~/ldd/sysx_group$ echo "1" > /sys/kernel/sysx/y
-	~/ldd/sysx_group$ cat /sys/kernel/sysx/y
+	sysx_group$ echo "1" > /sys/kernel/sysx/y
+	sysx_group$ cat /sys/kernel/sysx/y
 	1
 
 The *sysx_group* example shows accomplish the equivalent of *sysx_file2*
@@ -174,41 +175,64 @@ The drivers up to this point have ignored the problems associated
 with concurrency such as race conditions.
 
 The **fifo_rw** driver shows how to create a FIFO which can be read
-from and written to.  It does not handle concurrency but if
-each read/write is completed before another is started it
-will work as expected.
+from and written to.  Concurrency issues are not addressed yet.
 
-	~/ldd/fifo_rw$ sudo insmod fifo.ko
-	~/ldd/fifo_rw$ cd test/
+	fifo_rw$ sudo insmod fifo.ko
 
-Several test programs are included that read and write numbers.
+Several test programs are included that read and write integers.
 
-	~/ldd/fifo_rw/test$ sudo ./fifow 1 2
-	~/ldd/fifo_rw/test$ sudo ./fifor
+	fifo_rw$ cd test/
+	test$ sudo ./fifow 1 2  # write
+	test$ sudo ./fifor      # read
 	1
 	2
 
-And the values that were written were correctly read out.
-With the DEBUG parameter the calculated offsets in the circular
-buffer used for the FIFO will be displayed.
+The **fifo_sysfs** adds class attributes which all the read offset
+and write offset to be read from sysfs.
 
-	~/ldd/fifo_rw$ sudo insmod fifo.ko DEBUG=1
+    fifo_sysfs$ sudo insmod fifo.ko
+    fifo_sysfs$ ls /sys/class/fifo/
+     fifo0  read_offset  write_offset
+    fifo_sysfs$ cat /sys/class/fifo/read_offset 
+     0
+    fifo_sysfs$ cat /sys/class/fifo/write_offset 
+     0
+    fifo_sysfs$ cd test
+    test$ sudo ./fifow 1 2  # write
+    test$ cat /sys/class/fifo/read_offset 
+     0
+    test$ cat /sys/class/fifo/write_offset 
+     2
+
+Writing two integers increase the write offset by two.
+No values have been read so its offset is unchanged.
+
+    test$ sudo ./fifor  # read
+    1
+    2
+    test$ cat /sys/class/fifo/read_offset 
+    2
+    test$ cat /sys/class/fifo/write_offset 
+    2
+
+Reading two values moves the read offset to the same position
+as the write offset and the fifo is now empty.
 
 The **fifo_xxx** driver adds code which magnifies concurrency
 issues by waiting for two threads to reach a given point
 before proceeding.  As the processes race against each other,
 share data becomes out of sync, and havoc ensues.
 
-	~/ldd/fifo_xxx$ sudo insmod fifo.ko DEBUG=1
+	fifo_xxx$ sudo insmod fifo.ko DEBUG=1
 
 With this driver two processes must be run.
 
-	~/ldd/fifo_xxx/test$ sudo ./fifow 1 &
-	~/ldd/fifo_xxx/test$ sudo ./fifow 2 &
+	fifo_xxx/test$ sudo ./fifow 1 &
+	fifo_xxx/test$ sudo ./fifow 2 &
 	(bad things may happen)
 
-	~/ldd/fifo_xxx/test$ sudo ./fifor &
-	~/ldd/fifo_xxx/test$ sudo ./fifor &
+	fifo_xxx/test$ sudo ./fifor &
+	fifo_xxx/test$ sudo ./fifor &
 	(more havoc)
 
 Various problems may happen.  The read/write pointers
