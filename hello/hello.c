@@ -1,4 +1,3 @@
-
 #include <linux/init.h>
 #include <linux/module.h>
 
@@ -13,7 +12,8 @@ static void __exit hello_exit(void)
 	printk(KERN_ALERT "Goodbye, cruel world\n");
 }
 
+MODULE_AUTHOR("Jeremiah Mahler <jmmahler@gmail.com>");
+MODULE_LICENSE("GPL");
+
 module_init(hello_init);
 module_exit(hello_exit);
-
-MODULE_LICENSE("GPL");
