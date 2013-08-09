@@ -51,7 +51,7 @@ The following is an overview of the drivers in this project:
   - sysx\_ktype2 - uses `kobject_init_and_add` instead of ``kobject_create_and_add`
  - [Concurrency](#concurrency)
   - fifo\_rw - read/write fifo, similar to data\_rw
-  - fifo\_sysfs - class attributes (files) in sysfs (/sys/)
+  - fifo\_sysfs - adds attributes (files) in sysfs (/sys/)
   - fifo\_xxx - create race conditions that break the fifo
   - fifo\_fix - (in development) how to fix the race conditions using mutexes
 
@@ -187,21 +187,21 @@ Several test programs are included that read and write integers.
 	1
 	2
 
-The **fifo_sysfs** adds class attributes which all the read offset
-and write offset to be read from sysfs.
+The **fifo_sysfs** adds device attributes which make the read offset
+and write offset available in sysfs.
 
     fifo_sysfs$ sudo insmod fifo.ko
-    fifo_sysfs$ ls /sys/class/fifo/
-     fifo0  read_offset  write_offset
-    fifo_sysfs$ cat /sys/class/fifo/read_offset 
+    fifo_sysfs$ ls /sys/class/fifo/fifo0
+     read_offset  write_offset  ...
+    fifo_sysfs$ cat /sys/class/fifo/fifo0/read_offset 
      0
-    fifo_sysfs$ cat /sys/class/fifo/write_offset 
+    fifo_sysfs$ cat /sys/class/fifo/fifo0/write_offset 
      0
     fifo_sysfs$ cd test
     test$ sudo ./fifow 1 2  # write
-    test$ cat /sys/class/fifo/read_offset 
+    test$ cat /sys/class/fifo/fifo0/read_offset 
      0
-    test$ cat /sys/class/fifo/write_offset 
+    test$ cat /sys/class/fifo/fifo0/write_offset 
      2
 
 Writing two integers increase the write offset by two.
@@ -210,9 +210,9 @@ No values have been read so its offset is unchanged.
     test$ sudo ./fifor  # read
     1
     2
-    test$ cat /sys/class/fifo/read_offset 
+    test$ cat /sys/class/fifo/fifo0/read_offset 
     2
-    test$ cat /sys/class/fifo/write_offset 
+    test$ cat /sys/class/fifo/fifo0/write_offset 
     2
 
 Reading two values moves the read offset to the same position

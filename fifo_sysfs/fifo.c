@@ -116,39 +116,41 @@ struct file_operations fifo_fops = {
 };
 
 
-static ssize_t read_offset_show(struct class *class,
-								struct class_attribute *attr,
+static ssize_t read_offset_show(struct device *dev,
+								struct device_attribute *attr,
 								char *buf)
 {
+	struct fifo_dev *fifo_devp = dev_get_drvdata(dev);
 	return sprintf(buf, "%lu\n", fifo_devp->read_ptr - fifo_devp->fifo_start);
 }
 
-static ssize_t read_offset_store(struct class *class,
-									struct class_attribute *attr,
+static ssize_t read_offset_store(struct device *dev,
+									struct device_attribute *attr,
 									const char *buf,
 									size_t count)
 {
 	return 0;  // stored nothing
 }
 
-static CLASS_ATTR(read_offset, 0666, read_offset_show, read_offset_store);
+static DEVICE_ATTR(read_offset, 0666, read_offset_show, read_offset_store);
 
-static ssize_t write_offset_show(struct class *class,
-								struct class_attribute *attr,
+static ssize_t write_offset_show(struct device *dev,
+								struct device_attribute *attr,
 								char *buf)
 {
+	struct fifo_dev *fifo_devp = dev_get_drvdata(dev);
 	return sprintf(buf, "%lu\n", fifo_devp->write_ptr - fifo_devp->fifo_start);
 }
 
-static ssize_t write_offset_store(struct class *class,
-									struct class_attribute *attr,
+static ssize_t write_offset_store(struct device *dev,
+									struct device_attribute *attr,
 									const char *buf,
 									size_t count)
 {
 	return 0;
 }
 
-static CLASS_ATTR(write_offset, 0666, write_offset_show, write_offset_store);
+static DEVICE_ATTR(write_offset, 0666, write_offset_show, write_offset_store);
 
 
 static void fifo_cleanup(void)
@@ -212,27 +214,27 @@ static int __init fifo_init(void)
 	fifo_devp->write_ptr = &fifo_devp->fifo[0];
 	fifo_devp->empty = 1;
 
-	err = class_create_file(fifo_class, &class_attr_read_offset);
-	if (err) {
-		goto err_out;
-	}
-
-	err = class_create_file(fifo_class, &class_attr_write_offset);
-	if (err) {
-		goto err_out;
-	}
-
 	err = cdev_add(&fifo_devp->cdev, fifo_major, 1);
 	if (err) {
 		printk(KERN_WARNING "cdev_add failed\n");
 		goto err_out;
-	} else {
-		cdev_add_done = 1;
 	}
+	cdev_add_done = 1;
 
 	/* send uevents to udev, so it'll create /dev nodes */
 	/* /dev/fifo0 */
-	fifo_device = device_create(fifo_class, NULL, MKDEV(MAJOR(fifo_major), 0), NULL, "fifo%d",0);
+	fifo_device = device_create(fifo_class, NULL, MKDEV(MAJOR(fifo_major), 0), fifo_devp, "fifo%d",0);
+
+	err = device_create_file(fifo_device, &dev_attr_read_offset);
+	if (err) {
+		goto err_out;
+	}
+
+	err = device_create_file(fifo_device, &dev_attr_write_offset);
+	if (err) {
+		goto err_out;
+	}
+
 
 	return 0;  /* success */
 
