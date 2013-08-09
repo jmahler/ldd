@@ -12,11 +12,10 @@
 #include <linux/slab.h>
 #include <linux/uaccess.h>
 
-static int DEBUG = 0;
-module_param(DEBUG, int, S_IRUGO);
-
 static dev_t fifo_major;
 static int cdev_add_done;
+struct class *fifo_class;
+struct device *fifo_device;
 
 struct fifo_dev {
 	struct cdev cdev;
@@ -27,9 +26,6 @@ struct fifo_dev {
 	char *fifo_end;
 	int empty;
 } *fifo_devp;
-
-struct class *fifo_class;
-struct device *fifo_device;
 
 static DEFINE_MUTEX(read_mtx);
 static DEFINE_MUTEX(write_mtx);
@@ -85,25 +81,10 @@ int fifo_open(struct inode* inode, struct file* filp)
 
 	fifo_devp = container_of(inode->i_cdev, struct fifo_dev, cdev);
 
-	/* create access to devp from filp, filp is used in other operations */
 	filp->private_data = fifo_devp;
 
 	return 0;
 }
-
-/*
- * The fifo is implemented using a cirular buffer.
- * It is empty when empty = 1 and the read/write pointers
- * are at the same position.  It is empty when empty = 0 and
- * the read/write pointers are at the same position.
- *
- *             W
- *   +---+---+---+
- *   |   |   |   |
- *   +---+---+---+
- *     R
- *     
- */
 
 ssize_t fifo_read(struct file *filp, char __user *buf, size_t count,
 					loff_t *f_pos)
@@ -112,16 +93,11 @@ ssize_t fifo_read(struct file *filp, char __user *buf, size_t count,
 
 	struct fifo_dev *dev = filp->private_data;
 
-	if (DEBUG) printk(KERN_ALERT "fifo_read(%zu)\n", count);
-	if (DEBUG) printk(KERN_ALERT "  pre-offsets; read, write: %zu, %zu\n",
-										dev->read_ptr - dev->fifo_start,
-										dev->write_ptr - dev->fifo_start);
 	left = count;
 
 	while (left) {
 
 		if (dev->empty) {
-			if (DEBUG) printk(KERN_ALERT "  fifo empty\n");
 			break;
 		}
 
@@ -146,9 +122,6 @@ ssize_t fifo_read(struct file *filp, char __user *buf, size_t count,
 		if (dev->read_ptr == dev->write_ptr) {
 			dev->empty = 1;
 		}
-
-		if (DEBUG) printk(KERN_ALERT "  post read offset: %zu\n",
-											dev->read_ptr - dev->fifo_start);
 	}
 
 	return (count - left);
@@ -161,16 +134,11 @@ ssize_t fifo_write(struct file *filp, const char __user *buf, size_t count,
 
 	struct fifo_dev *dev = filp->private_data;
 
-	if (DEBUG) printk(KERN_ALERT "fifo_write(%zu)\n", count);
-	if (DEBUG) printk(KERN_ALERT "  pre-offsets; read, write: %zu, %zu\n",
-										dev->read_ptr - dev->fifo_start,
-										dev->write_ptr - dev->fifo_start);
 	left = count;
 
 	while (left) {
 
 		if (!(dev->empty) && (dev->read_ptr == dev->write_ptr)) {
-			if (DEBUG) printk(KERN_ALERT "  fifo full\n");
 			break;
 		}
 
@@ -191,9 +159,6 @@ ssize_t fifo_write(struct file *filp, const char __user *buf, size_t count,
 			(dev->write_ptr)++;
 			pwait(write_mtx);
 		}
-
-		if (DEBUG) printk(KERN_ALERT "  post write offset: %zu\n",
-										dev->write_ptr - dev->fifo_start);
 	}
 
 	return (count - left);
@@ -211,6 +176,44 @@ struct file_operations fifo_fops = {
 	.write = fifo_write,
 	.release = fifo_release,
 };
+
+
+static ssize_t read_offset_show(struct device *dev,
+								struct device_attribute *attr,
+								char *buf)
+{
+	struct fifo_dev *fifo_devp = dev_get_drvdata(dev);
+	return sprintf(buf, "%lu\n", fifo_devp->read_ptr - fifo_devp->fifo_start);
+}
+
+static ssize_t read_offset_store(struct device *dev,
+									struct device_attribute *attr,
+									const char *buf,
+									size_t count)
+{
+	return 0;  // stored nothing
+}
+
+static DEVICE_ATTR(read_offset, 0666, read_offset_show, read_offset_store);
+
+static ssize_t write_offset_show(struct device *dev,
+								struct device_attribute *attr,
+								char *buf)
+{
+	struct fifo_dev *fifo_devp = dev_get_drvdata(dev);
+	return sprintf(buf, "%lu\n", fifo_devp->write_ptr - fifo_devp->fifo_start);
+}
+
+static ssize_t write_offset_store(struct device *dev,
+									struct device_attribute *attr,
+									const char *buf,
+									size_t count)
+{
+	return 0;
+}
+
+static DEVICE_ATTR(write_offset, 0666, write_offset_show, write_offset_store);
+
 
 static void fifo_cleanup(void)
 {
@@ -235,6 +238,7 @@ static void fifo_cleanup(void)
 	}
 }
 
+
 static int __init fifo_init(void)
 {
 	int err = 0;
@@ -249,7 +253,7 @@ static int __init fifo_init(void)
 	if (alloc_chrdev_region(&fifo_major, 0, 1, DEVICE_NAME) < 0) {
 		printk(KERN_WARNING "Unable to register device\n");
 		err = -1;
-		goto out;
+		goto err_out;
 	}
 
 	/* populate sysfs entries */
@@ -260,7 +264,7 @@ static int __init fifo_init(void)
 	if (!fifo_devp) {
 		printk(KERN_WARNING "Unable to kmalloc fifo_devp\n");
 		err = -ENOMEM;
-		goto out;
+		goto err_out;
 	}
 
 	cdev_init(&fifo_devp->cdev, &fifo_fops);
@@ -275,26 +279,34 @@ static int __init fifo_init(void)
 	err = cdev_add(&fifo_devp->cdev, fifo_major, 1);
 	if (err) {
 		printk(KERN_WARNING "cdev_add failed\n");
-		//err = err;
-		goto out;
-	} else {
-		cdev_add_done = 1;
+		goto err_out;
 	}
+	cdev_add_done = 1;
 
 	/* send uevents to udev, so it'll create /dev nodes */
 	/* /dev/fifo0 */
-	fifo_device = device_create(fifo_class, NULL, MKDEV(MAJOR(fifo_major), 0), NULL, "fifo%d",0);
+	fifo_device = device_create(fifo_class, NULL, MKDEV(MAJOR(fifo_major), 0), fifo_devp, "fifo%d",0);
+
+	err = device_create_file(fifo_device, &dev_attr_read_offset);
+	if (err) {
+		goto err_out;
+	}
+
+	err = device_create_file(fifo_device, &dev_attr_write_offset);
+	if (err) {
+		goto err_out;
+	}
+
 
 	return 0;  /* success */
 
-out:
+err_out:
 	fifo_cleanup();
 	return err;
 }
 
 static void __exit fifo_exit(void)
 {
-
 	fifo_cleanup();
 }
 
@@ -303,4 +315,3 @@ MODULE_AUTHOR("Jeremiah Mahler <jmmahler@gmail.com>");
 
 module_init(fifo_init);
 module_exit(fifo_exit);
-
