@@ -8,7 +8,6 @@
 #define DEVICE_NAME "data"
 
 static dev_t data_major;
-static int cdev_add_done;
 struct class *data_class;
 struct device *data_device;
 
@@ -20,54 +19,23 @@ struct file_operations data_fops = {
 	.owner = THIS_MODULE,
 };
 
-static void data_cleanup(void)
-{
-	if (data_major) {
-		unregister_chrdev_region(data_major, 1);
-	}
-
-	if (data_device) {
-		device_destroy(data_class, data_major);
-	}
-
-	if (cdev_add_done) {
-		cdev_del(&data_devp->cdev);
-	}
-
-	if (data_devp) {
-		kfree(data_devp);
-	}
-
-	if (data_class) {
-		class_destroy(data_class);
-	}
-}
-
 static int __init data_init(void)
 {
 	int err = 0;
 
-	data_major = 0;
-	data_class = NULL;
-	data_device = NULL;
-	data_devp = NULL;
-	cdev_add_done = 0;
-
-	if (alloc_chrdev_region(&data_major, 0, 1, DEVICE_NAME) < 0) {
+	err = alloc_chrdev_region(&data_major, 0, 1, DEVICE_NAME);
+	if (err < 0) {
 		printk(KERN_WARNING "Unable to register device\n");
-		err = -1;
-		goto err_out;
+		goto err_chrdev_region;
 	}
 
-	/* populate sysfs entries */
-	/* /sys/class/data/data0/ */
 	data_class = class_create(THIS_MODULE, DEVICE_NAME);
 
 	data_devp = kmalloc(sizeof(struct data_dev), GFP_KERNEL);
 	if (!data_devp) {
 		printk(KERN_WARNING "Unable to kmalloc data_devp\n");
 		err = -ENOMEM;
-		goto err_out;
+		goto err_malloc_data_devp;
 	}
 
 	cdev_init(&data_devp->cdev, &data_fops);
@@ -75,26 +43,42 @@ static int __init data_init(void)
 	err = cdev_add(&data_devp->cdev, data_major, 1);
 	if (err) {
 		printk(KERN_WARNING "cdev_add failed\n");
-		goto err_out;
-	} else {
-		cdev_add_done = 1;
+		goto err_cdev_add;
 	}
 
-	/* send uevents to udev, so it'll create /dev nodes */
-	/* /dev/data0 */
 	data_device = device_create(data_class, NULL,
 							MKDEV(MAJOR(data_major), 0), NULL, "data%d",0);
+	if (IS_ERR(data_device)) {
+		printk(KERN_WARNING "device_create failed\n");
+		err = PTR_ERR(data_device);
+		goto err_device_create;
+	}
 
 	return 0;  /* success */
 
-err_out:
-	data_cleanup();
+err_device_create:
+	cdev_del(&data_devp->cdev);
+err_cdev_add:
+	kfree(data_devp);
+err_malloc_data_devp:
+	class_destroy(data_class);
+	unregister_chrdev_region(data_major, 1);
+err_chrdev_region:
+
 	return err;
 }
 
 static void __exit data_exit(void)
 {
-	data_cleanup();
+	device_destroy(data_class, data_major);
+
+	cdev_del(&data_devp->cdev);
+
+	kfree(data_devp);
+
+	class_destroy(data_class);
+
+	unregister_chrdev_region(data_major, 1);
 }
 
 MODULE_AUTHOR("Jeremiah Mahler <jmmahler@gmail.com>");
