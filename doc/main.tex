@@ -1,15 +1,11 @@
 
 % {{{ preamble
 
-%\documentclass[10pt,letterpaper]{article}
 \documentclass{article}
-%\documentclass[twocolumn]{article}
-%\documentclass[12pt]{report}
 
 \usepackage{url}
 \usepackage{hyperref}
 \usepackage{graphicx}
-\usepackage{multicol}
 \usepackage{tikz}
 \usepackage{tikz-timing}
 \usepackage{nonfloat}
@@ -23,44 +19,21 @@
 		language=C,
 		tabsize=4,
 		basicstyle=\ttfamily,
-		showstringspaces=false,  % don't show the space character
 		%basicstyle=\footnotesize,
+		showstringspaces=false,  % don't show the space character
 		basicstyle=\normalsize,
 		captionpos=b,
 		xleftmargin=0.3in}
-
-%\usepackage{sectsty}  % \sectionfont
-%\sectionfont{\normalsize}
-%\subsectionfont{\normalsize}
-
-%\usepackage{fancyhdr}
-%\pagestyle{fancy}
-%\fancyhf{}
-%\renewcommand{\headrulewidth}{0pt}
-%\renewcommand{\footrulewidth}{0pt}
-%\rhead{\thepage}
 
 \usepackage{vmargin}  % make the margins a bit smaller
 %\setmarginsrb{1.0in}{1.0in}{1.0in}{1.0in}{0in}{0.4in}{0.0in}{0.40in}
 \setmarginsrb{1.0in}{1.0in}{1.0in}{1.0in}{0in}{0.25in}{0in}{0.20in}
 
-%\usepackage{setspace}
-%\onehalfspace
-%\doublespace
+\raggedright
 
-%\raggedright
-%\setlength{\parindent}{0.2in}
-
-% no numbers in bibliography, good
 \usepackage[backend=biber,autocite=footnote,
 			bibstyle=authortitle,citestyle=verbose-inote]{biblatex}
-% big numbers, no foot note citations
-%\usepackage[backend=biber,style=numeric]{biblatex} % OK
-% bibliography numbers different than footnote number
-%\usepackage[backend=biber,autocite=footnote,
-%			bibstyle=numeric,citestyle=verbose-inote]{biblatex}
-%\usepackage[backend=biber,autocite=footnote,
-%			bibstyle=numeric,citestyle=verbose-inote]{biblatex}  % OK
+\setlength{\bibitemsep}{\baselineskip}
 
 \addbibresource{references.bib}
 
@@ -70,8 +43,6 @@
 
 \VerbatimFootnotes
 
-%\twocolumn[\begin{@twocolumnfalse}
-
 % {{{ title page
 
 \thispagestyle{empty}
@@ -79,25 +50,9 @@
 \centerline{\Large \textbf{Learning Linux Device Drivers}}
 \vspace{0.1in}
 \centerline{\normalsize {Jeremiah Mahler} ({\href{mailto:jmmahler@gmail.com}{jmmahler@gmail.com}})}
-%\centerline{\today}
-%\vspace{0.1in}
-%\centerline{\small {\href{mailto:jmmahler@gmail.com}{jmmahler@gmail.com}} }
 \centerline{\small \today}
 \vspace{0.2in}
 
-% }}}
-
-%\end{@twocolumnfalse}]
-
-%\begin{multicols}{2}
-
-% {{{ abstract
-%\pagebreak
-%\thispagestyle{empty}
-%\begin{abstract}
-%\noindent
-% TODO
-%\end{abstract}
 % }}}
 
 \tableofcontents
@@ -106,17 +61,37 @@
 % {{{ Introduction
 \section{Introduction}
 
-\nocite{corbet2009linux}
-\nocite{venkateswaran2008essential}
-\nocite{love2010linux}
-\nocite{love2013linux}
-
 \begin{figure*}[h!]
 \begin{center}
 \includegraphics[scale=0.6]{hierarchy/hier}
 \end{center}
-\caption{Hierarch of kernel module examples.}\label{fig:hier}
+\caption{Hierarchy of kernel module examples.  Simplest at the
+top downward to the more complex.}\label{fig:hier}
 \end{figure*}
+
+There are many excellent books about Linux device drivers
+\autocite{corbet2009linux}
+\autocite{venkateswaran2008essential}
+\autocite{love2010linux}
+\autocite{love2013linux}.
+However, in this authors experience, they were difficult to learn from.
+It certainly was not from their lack of detail.
+Clearly each of the authors have a profound understanding of the Linux
+kernel and their books reflect this.
+If anything it is due to this lack of simplicity.
+
+The drivers described in this document aim to be simple and concise.
+Each one introduces as few concepts as possible.
+And each driver is a fully working example
+\footnote{If you think a driver might behave in a different way
+if you changed something, try it and see.
+This is a far better way to solidify your understanding than just
+following the authors examples.}.
+Many of the drivers are built in stages.
+Each stage introduces a new concept.
+And the changes can be concisely described showing the
+differences (\verb+diff+).
+Figure \ref{fig:hier} shows the hierarchy of driver examples.
 
 % }}}
 
