@@ -16,20 +16,22 @@
 \usepackage{amsmath}
 \usepackage{mathtools}
 \usepackage{fancyvrb}
+\usepackage{parskip}
 
 \usepackage{listings}
 \lstset{numbers=left,
 		language=C,
 		tabsize=4,
+		basicstyle=\ttfamily,
 		showstringspaces=false,  % don't show the space character
 		%basicstyle=\footnotesize,
 		basicstyle=\normalsize,
 		captionpos=b,
 		xleftmargin=0.3in}
 
-\usepackage{sectsty}  % \sectionfont
-\sectionfont{\normalsize}
-\subsectionfont{\normalsize}
+%\usepackage{sectsty}  % \sectionfont
+%\sectionfont{\normalsize}
+%\subsectionfont{\normalsize}
 
 %\usepackage{fancyhdr}
 %\pagestyle{fancy}
@@ -47,7 +49,7 @@
 %\doublespace
 
 %\raggedright
-\setlength{\parindent}{0.2in}
+%\setlength{\parindent}{0.2in}
 
 % no numbers in bibliography, good
 \usepackage[backend=biber,autocite=footnote,
@@ -74,7 +76,7 @@
 
 \thispagestyle{empty}
 
-\centerline{\Large \textbf{Linux Module Programming in Small Diffs}}
+\centerline{\Large \textbf{Learning Linux Device Drivers}}
 \vspace{0.1in}
 \centerline{\normalsize {Jeremiah Mahler} ({\href{mailto:jmmahler@gmail.com}{jmmahler@gmail.com}})}
 %\centerline{\today}
@@ -138,10 +140,20 @@ hello$ sudo rmmod hello
 			 	 label={lst:hello}]
 	{../hello/hello.c}
 
-The \verb+__init+ and \verb+__exit+ on lines 4 and 10
+The \verb+module_init+ (line 18) and \verb+module_exit+ (line 19) tell
+the kernel which functions to call when this module is
+loaded (\verb+insmod+) and unloaded (\verb+rmmod+).
+
+The \verb+__init+ (line 4) and \verb+__exit+ (line 10)
 are optional hints for the compiler.  For example in the case of
-\verb+__init+ it may discard that code after initiliazation
-has been completed.
+\verb+__init+, this tells the kernel that it may discard the code
+after initialization has been completed.
+
+Both the init function (line 4) and the exit function (line 10)
+are declared \verb+static+.
+Since these functions are not meant to be used outside the scope
+of this file, declaring them \verb+static+ enforces this
+constraint\autocite[Pg. 52]{corbet2009linux}.
 
 The \verb+printk+ statements are the \verb+printf+ of the
 kernel domain.  There are various levels, in this case
@@ -150,12 +162,9 @@ to appear on the console.  Notice that there is no comma
 between the level and the message.
 
 The \verb+MODULE_AUTHOR+ and \verb+MODULE_LICENSE+ on lines 15 and 16
-are optional but recommended.  There are various other \verb+MODULE_*+
-as well (\verb+linux/module.h+).
-
-The \verb+module_init+ and \verb+module_exit+ tell the kernel which
-functions to call when this module is loaded (\verb+insmod+) and
-unloaded (\verb+rmmod+).
+are optional but recommended\autocite[Pg. 51]{corbet2009linux}.
+There are various other \verb+MODULE_*+
+options as well (\verb+linux/module.h+).
 
 \clearpage
 \subsection{param}
@@ -202,36 +211,52 @@ the usual file operations.
 
 The first step is to construct the basic infrastructure for
 a character driver as shown in Listing \ref{lst:data_chr}.
+It doesn't do anything useful but it will simplify the description
+of upcoming drivers.
 
-The \verb+DEVICE_NAME+ on line 8 defines the string which will
-be used to define the module name in later functions.
+The \verb+DEVICE_NAME+ (line 8) is just a shortcut for the
+name which is used in several places.
 
 Lines 10-17 are the global variables that will be used.
 The \verb+struct data_dev+ is the per device structure.
 Notice that a character device is placed inside.
 
 The \verb+file_operations+ (line 19-21) in this case only
-defines the \verb+.owner+.  Upcoming modules will and references
+defines the \verb+.owner+.  Upcoming modules will add references
 to the open, close, read, write, and seek functions to this structure.
 
-The \verb+data_cleanup+ function takes care of unregistering and
-removing the various that were created during \verb+data_init+.
-It will be called if module initialization fails or during module
-removal.  Different authors use different styles for cleanup.
-It is not always done with a separate function.
-Some use several goto labels each with levels of items to remove
-\footnote{Recalling the \verb+__init+ directive, it might be
-beneficial use the goto style since this code will be
-purged after init.}.
+\verb+alloc_chrdev_region+ (line 26) allocates a major and minor number
+for the character device\autocite[Pg. 66]{corbet2009linux}.
+In this case only one major and minor pair is needed.
 
-\lstinputlisting[caption={Data driver infrastructure.},
+Functions such as \verb+alloc_chrdev_region+ may fail and when they
+do anything that has been created up to that point must be undone
+to ensure the kernel is left in a consistent state.
+A common way this is done is using \verb+goto+ statements which
+branch to different steps in the exit
+sequence\autocite[Pg. 53]{corbet2009linux}.
+It can be seen that if \verb+alloc_chrdev_region+ fails its \verb+goto+
+(line 29) will branch to line 66.
+Since nothing was created up to that point nothing has to be undone.
+
+\verb+class_create+ (line 32) establishes a ``class'' for this
+module which is also represented in sysfs under \verb+/sys/class/data+.
+This object will be used later as an argument to \verb+device_create+.
+
+Since the per device structure is just a pointer it must be
+allocated before it is used (line 32).
+
+To establish the character device it must be initialized and
+added (lines 41-43).  And finally the device is created (line 49).
+This device will now appear under \verb+/dev/fifo0+.
+
+\lstinputlisting[caption={data\_chr driver.},
 			 	 label={lst:data_chr}]
 	{../data_chr/data.c}
 
 
 %\lstinputlisting[linerange=26-30,
 %				firstnumber=26]{../hello/hello.c}
-
 
 \subsection{data\_rw}
 \subsection{data\_sk}
