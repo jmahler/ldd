@@ -1,5 +1,5 @@
---- ../data_rw/data.c	2013-08-10 18:09:57.187990829 -0700
-+++ data.c	2013-08-10 18:10:24.859991118 -0700
+--- ../data_rw/data.c	2013-08-11 00:28:57.774964943 -0700
++++ data.c	2013-08-11 00:28:18.202964529 -0700
 @@ -76,6 +76,35 @@
  	return count;
  }
@@ -7,7 +7,7 @@
 +static loff_t data_llseek(struct file *filp, loff_t offset, int orig)
 +{
 +	struct data_dev *data_devp = filp->private_data;
-+	size_t cur_ofs;
++	loff_t cur_ofs;
 +
 +	cur_ofs = data_devp->cur_ofs;
 +
