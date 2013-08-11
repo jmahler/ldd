@@ -1,5 +1,5 @@
 --- ../data_chr/data.c	2013-08-10 10:17:01.359016284 -0700
-+++ data.c	2013-08-10 18:09:57.187990829 -0700
++++ data.c	2013-08-11 00:28:57.774964943 -0700
 @@ -6,6 +6,7 @@
  #include <linux/uaccess.h>
  
@@ -13,7 +13,7 @@
  struct data_dev {
  	struct cdev cdev;
 +	char data[MAX_DATA];
-+	size_t cur_ofs;  // current offset
++	loff_t cur_ofs;  // current offset
  } *data_devp;
  
 +static int data_open(struct inode* inode, struct file* filp)
@@ -32,7 +32,7 @@
 +					loff_t *f_pos)
 +{
 +	struct data_dev *data_devp = filp->private_data;
-+	size_t cur_ofs;
++	loff_t cur_ofs;
 +	char *datp;
 +	size_t left;
 +
@@ -55,7 +55,7 @@
 +					loff_t *f_pos)
 +{
 +	struct data_dev *data_devp = filp->private_data;
-+	size_t cur_ofs;
++	loff_t cur_ofs;
 +	char *datp;
 +	size_t left;
 +

@@ -15,7 +15,7 @@ struct device *data_device;
 struct data_dev {
 	struct cdev cdev;
 	char data[MAX_DATA];
-	size_t cur_ofs;  // current offset
+	loff_t cur_ofs;  // current offset
 } *data_devp;
 
 static int data_open(struct inode* inode, struct file* filp)
@@ -34,7 +34,7 @@ static ssize_t data_read(struct file *filp, char __user *buf, size_t count,
 					loff_t *f_pos)
 {
 	struct data_dev *data_devp = filp->private_data;
-	size_t cur_ofs;
+	loff_t cur_ofs;
 	char *datp;
 	size_t left;
 
@@ -57,7 +57,7 @@ static ssize_t data_write(struct file *filp, const char __user *buf, size_t coun
 					loff_t *f_pos)
 {
 	struct data_dev *data_devp = filp->private_data;
-	size_t cur_ofs;
+	loff_t cur_ofs;
 	char *datp;
 	size_t left;
 
