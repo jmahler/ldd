@@ -14,6 +14,7 @@
 \usepackage{fancyvrb}
 \usepackage{parskip}
 
+\usepackage{courier}
 \usepackage{listings}
 \lstset{numbers=left,
 		language=C,
@@ -21,8 +22,12 @@
 		basicstyle=\ttfamily,
 		%basicstyle=\footnotesize,
 		showstringspaces=false,  % don't show the space character
+		%commentstyle=\textit,
+		showtabs=false,
+		extendedchars=true,
 		basicstyle=\normalsize,
 		captionpos=b,
+		frame=tb,
 		xleftmargin=0.3in}
 
 \usepackage{vmargin}  % make the margins a bit smaller
@@ -89,7 +94,7 @@ This is a far better way to solidify your understanding than just
 following the authors examples.}.
 Many of the drivers are built in stages.
 Each stage introduces a new concept.
-And the changes can be concisely described showing the
+And the changes are concisely described showing the
 differences (\verb+diff+).
 Figure \ref{fig:hier} shows the hierarchy of driver examples.
 
@@ -189,6 +194,7 @@ the usual file operations.
 
 % {{{ data_chr
 \subsection{data\_chr}
+\label{sec:data_chr}
 
 The first step is to construct the basic infrastructure for
 a character driver as shown in Listing \ref{lst:data_chr}.
@@ -245,6 +251,7 @@ This device will now appear under \verb+/dev/data0+.
 % {{{ data_rw
 \clearpage
 \subsection{data\_rw}
+\label{sec:data_rw}
 
 With the addition of read/write operations the device can be
 operated upon just like any other file.
@@ -303,7 +310,7 @@ And since nothing needs to be done when the device is closed,
 the release function (lines 77-80) simply returns success.
 
 \pagebreak
-\lstinputlisting[caption={param\$ diff -u ../data\_chr/data.c data.c},
+\lstinputlisting[caption={data\_rw\$ diff -u ../data\_chr/data.c data.c},
 			 	 label={lst:data_rw-diff}]
 	{../data_rw/diff}
 
@@ -318,13 +325,47 @@ one more function along with its corresponding entry in the
 file operations.  Listing \ref{lst:data_sk-diff} shows the
 differences.
 
-\lstinputlisting[caption={param\$ diff -u ../data\_chr/data.c data.c},
+\lstinputlisting[caption={data\_sk\$ diff -u ../data\_rw/data.c data.c},
 			 	 label={lst:data_sk-diff}]
 	{../data_sk/diff}
 
 % }}}
 
-\subsection{ioctlx}
+\subsection{data\_ioctl}
+
+Using \verb+ioctl()+ for new designs is not recommended\autocite[Pg. 156]{corbet2009linux}\autocite{love2010linux}.
+Instead \verb+sysfs+ is preferred.
+While \verb+/proc+ is another option, it is also becoming obsolete in
+favor of \verb+sysfs+.
+
+The ioctl example has the fewest number of differences compared to
+the \verb+data_chr+ driver (Section \ref{sec:data_chr}) as shown
+in Listing \ref{lst:data_ioctl-diff}.
+The open (lines 10-19) and release (lines 75-78) are the same as
+those for the \verb+data_rw+ driver (Section \ref{sec:data_rw}).
+The only code of interest is for the \verb+data_ioctl+ function (lines 29-73).
+
+The first thing to notice is the use of "magic" (lines 23-25, 37).
+Magic is used to make the ioctl calls unique across the entire system
+which helps prevent inadvertent configuration if the wrong device is opened
+\autocite[Pg. 158]{corbet2009linux}.
+
+The three defines (lines 23-24) describe the supported ioctl operations.
+Any number of additional operations can be added.
+And it can be seen that there is an operation that has no data (\verb+_IO+),
+reads data (\verb+_IOR+) and writes data (\verb+_IOW+).
+The \verb+DATA_IOC_MAXNR+ (line 27) is used as a sanity check later (line 41).
+
+And the switch statement (lines 53-70) process the ioctl commands.
+In this case all the operations involve the global variable \verb+x+.
+It is either reset, read or written.
+
+\pagebreak
+\lstinputlisting[caption={data\_ioctl\$ diff -u ../data\_chr/data.c data.c},
+			 	 label={lst:data_ioctl-diff}]
+	{../data_ioctl/diff}
+
+
 \subsection{null}
 \subsection{zero}
 

@@ -1,5 +1,5 @@
 
-obj-m := ioctlx.o
+obj-m := data.o
 
 path := $(shell uname -r)
 
