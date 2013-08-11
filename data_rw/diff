@@ -1,0 +1,90 @@
+--- ../data_chr/data.c	2013-08-10 10:17:01.359016284 -0700
++++ data.c	2013-08-10 18:09:57.187990829 -0700
+@@ -6,6 +6,7 @@
+ #include <linux/uaccess.h>
+ 
+ #define DEVICE_NAME "data"
++#define MAX_DATA 128
+ 
+ static dev_t data_major;
+ struct class *data_class;
+@@ -13,10 +14,79 @@
+ 
+ struct data_dev {
+ 	struct cdev cdev;
++	char data[MAX_DATA];
++	size_t cur_ofs;  // current offset
+ } *data_devp;
+ 
++static int data_open(struct inode* inode, struct file* filp)
++{
++	struct data_dev *data_devp;
++
++	data_devp = container_of(inode->i_cdev, struct data_dev, cdev);
++	data_devp->cur_ofs = 0;
++
++	filp->private_data = data_devp;
++
++	return 0;
++}
++
++static ssize_t data_read(struct file *filp, char __user *buf, size_t count,
++					loff_t *f_pos)
++{
++	struct data_dev *data_devp = filp->private_data;
++	size_t cur_ofs;
++	char *datp;
++	size_t left;
++
++	cur_ofs = data_devp->cur_ofs;
++	datp = data_devp->data;
++	left = MAX_DATA - cur_ofs;
++
++	count = (count > left) ? left : count;
++
++	if (copy_to_user(buf, (void *) (datp + cur_ofs), count) != 0) {
++		return -EIO;
++	}
++
++	data_devp->cur_ofs = cur_ofs + count;
++
++	return count;
++}
++
++static ssize_t data_write(struct file *filp, const char __user *buf, size_t count,
++					loff_t *f_pos)
++{
++	struct data_dev *data_devp = filp->private_data;
++	size_t cur_ofs;
++	char *datp;
++	size_t left;
++
++	cur_ofs = data_devp->cur_ofs;
++	datp = data_devp->data;
++	left = MAX_DATA - cur_ofs;
++
++	count = (count > left) ? left : count;
++
++	if (copy_from_user((void *) (datp + cur_ofs), buf, count) != 0) {
++		return -EIO;
++	}
++
++	data_devp->cur_ofs = cur_ofs + count;
++
++	return count;
++}
++
++static int data_release(struct inode *inode, struct file *filp)
++{
++	return 0;
++}
++
+ struct file_operations data_fops = {
+ 	.owner = THIS_MODULE,
++	.open = data_open,
++	.read = data_read,
++	.write = data_write,
++	.release = data_release,
+ };
+ 
+ static int __init data_init(void)

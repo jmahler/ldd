@@ -1,0 +1,46 @@
+--- ../data_rw/data.c	2013-08-10 18:09:57.187990829 -0700
++++ data.c	2013-08-10 18:10:24.859991118 -0700
+@@ -76,6 +76,35 @@
+ 	return count;
+ }
+ 
++static loff_t data_llseek(struct file *filp, loff_t offset, int orig)
++{
++	struct data_dev *data_devp = filp->private_data;
++	size_t cur_ofs;
++
++	cur_ofs = data_devp->cur_ofs;
++
++	switch (orig) {
++		case SEEK_SET:
++			cur_ofs = offset;
++			break;
++		case SEEK_CUR:
++			cur_ofs += offset;
++			break;
++		case SEEK_END:
++			cur_ofs = MAX_DATA + offset;
++			break;
++		default:
++			return -EINVAL;
++	}
++
++	if (cur_ofs < 0 || cur_ofs >= MAX_DATA)
++		return -EINVAL;
++
++	data_devp->cur_ofs = cur_ofs;
++
++	return cur_ofs;
++}
++
+ static int data_release(struct inode *inode, struct file *filp)
+ {
+ 	return 0;
+@@ -86,6 +115,7 @@
+ 	.open = data_open,
+ 	.read = data_read,
+ 	.write = data_write,
++	.llseek  = data_llseek,
+ 	.release = data_release,
+ };
+ 

@@ -15,10 +15,10 @@ struct device *data_device;
 struct data_dev {
 	struct cdev cdev;
 	char data[MAX_DATA];
-	ssize_t cur_ofs;  // current offset
+	size_t cur_ofs;  // current offset
 } *data_devp;
 
-int data_open(struct inode* inode, struct file* filp)
+static int data_open(struct inode* inode, struct file* filp)
 {
 	struct data_dev *data_devp;
 
@@ -30,7 +30,7 @@ int data_open(struct inode* inode, struct file* filp)
 	return 0;
 }
 
-ssize_t data_read(struct file *filp, char __user *buf, size_t count,
+static ssize_t data_read(struct file *filp, char __user *buf, size_t count,
 					loff_t *f_pos)
 {
 	struct data_dev *data_devp = filp->private_data;
@@ -48,12 +48,12 @@ ssize_t data_read(struct file *filp, char __user *buf, size_t count,
 		return -EIO;
 	}
 
-	data_devp->cur_ofs = cur_ofs;
+	data_devp->cur_ofs = cur_ofs + count;
 
 	return count;
 }
 
-ssize_t data_write(struct file *filp, const char __user *buf, size_t count,
+static ssize_t data_write(struct file *filp, const char __user *buf, size_t count,
 					loff_t *f_pos)
 {
 	struct data_dev *data_devp = filp->private_data;
@@ -71,12 +71,12 @@ ssize_t data_write(struct file *filp, const char __user *buf, size_t count,
 		return -EIO;
 	}
 
-	data_devp->cur_ofs = cur_ofs;
+	data_devp->cur_ofs = cur_ofs + count;
 
 	return count;
 }
 
-int data_release(struct inode *inode, struct file *filp)
+static int data_release(struct inode *inode, struct file *filp)
 {
 	return 0;
 }
