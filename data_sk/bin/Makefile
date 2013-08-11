@@ -1,8 +1,7 @@
-
 ARGV := -Wall -Wextra -O2 -g
 
-test1: test1.c
+cats: cats.c
 	gcc $(ARGV) $< -o $@
 
 clean:
-	-rm -f test1
+	-rm -f cats
