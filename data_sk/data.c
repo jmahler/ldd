@@ -34,30 +34,18 @@ ssize_t data_read(struct file *filp, char __user *buf, size_t count,
 					loff_t *f_pos)
 {
 	struct data_dev *data_devp = filp->private_data;
-	size_t cnt;
 	size_t cur_ofs;
 	char *datp;
 	size_t left;
 
 	cur_ofs = data_devp->cur_ofs;
 	datp = data_devp->data;
-	left = count;
+	left = MAX_DATA - cur_ofs;
 
-	while (left) {
-		cnt = MAX_DATA - cur_ofs;
-		if (cnt > left)
-			cnt = left;
+	count = (count > left) ? left : count;
 
-		if (copy_to_user(buf, (void *) (datp + cur_ofs), cnt) != 0) {
-			return -EIO;
-		}
-
-		buf += cnt;
-		left -= cnt;
-		cur_ofs += cnt;
-
-		if (cur_ofs == MAX_DATA)
-			cur_ofs = 0;
+	if (copy_to_user(buf, (void *) (datp + cur_ofs), count) != 0) {
+		return -EIO;
 	}
 
 	data_devp->cur_ofs = cur_ofs;
@@ -69,32 +57,18 @@ ssize_t data_write(struct file *filp, const char __user *buf, size_t count,
 					loff_t *f_pos)
 {
 	struct data_dev *data_devp = filp->private_data;
-	size_t cnt;
 	size_t cur_ofs;
 	char *datp;
 	size_t left;
 
 	cur_ofs = data_devp->cur_ofs;
 	datp = data_devp->data;
-	left = count;
+	left = MAX_DATA - cur_ofs;
 
-	while (left) {
-		/* limit the size of this transfer */
-		cnt = MAX_DATA - cur_ofs;
-		if (cnt > left)
-			cnt = left;
+	count = (count > left) ? left : count;
 
-		if (copy_from_user((void *) (datp + cur_ofs), buf, cnt) != 0) {
-			return -EIO;
-		}
-
-		buf += cnt;
-		left -= cnt;
-		cur_ofs += cnt;
-
-		/* reset to begining if we reach the end */
-		if (cur_ofs == MAX_DATA)
-			cur_ofs = 0;
+	if (copy_from_user((void *) (datp + cur_ofs), buf, count) != 0) {
+		return -EIO;
 	}
 
 	data_devp->cur_ofs = cur_ofs;
@@ -110,13 +84,13 @@ static loff_t data_llseek(struct file *filp, loff_t offset, int orig)
 	cur_ofs = data_devp->cur_ofs;
 
 	switch (orig) {
-		case 0: /* SEEK_SET */
+		case SEEK_SET:
 			cur_ofs = offset;
 			break;
-		case 1: /* SEEK_CUR */
+		case SEEK_CUR:
 			cur_ofs += offset;
 			break;
-		case 2: /* SEEK_END */
+		case SEEK_END:
 			cur_ofs = MAX_DATA + offset;
 			break;
 		default:
