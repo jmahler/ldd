@@ -96,6 +96,8 @@ Figure \ref{fig:hier} shows the hierarchy of driver examples.
 % }}}
 
 \section{Hello, World}
+
+% {{{ hello
 \subsection{hello}
 
 The \verb+hello+ module (Listing \ref{lst:hello}) simply prints message
@@ -140,7 +142,9 @@ The \verb+MODULE_AUTHOR+ and \verb+MODULE_LICENSE+ on lines 15 and 16
 are optional but recommended\autocite[Pg. 51]{corbet2009linux}.
 There are various other \verb+MODULE_*+
 options as well (\verb+linux/module.h+).
+% }}}
 
+% {{{ param
 \clearpage
 \subsection{param}
 
@@ -174,14 +178,16 @@ be discussed in detail in later modules.}.
 
 On lines 13-19 and 25-30 it can be seen that the same message
 is printed \verb+howmany+ times.
+% }}}
 
 \section{Read/Write Data}
 
-The \verb+data+ module allocates a memory from ram which can
-be read from and written to.
+The \verb+data+ module allocates some memory which can
+then be read from and written to.
 This is accomplished as a character device and supports all
 the usual file operations.
 
+% {{{ data_chr
 \subsection{data\_chr}
 
 The first step is to construct the basic infrastructure for
@@ -223,8 +229,9 @@ allocated before it is used (line 32).
 
 To establish the character device it must be initialized and
 added (lines 41-43).  And finally the device is created (line 49).
-This device will now appear under \verb+/dev/fifo0+.
+This device will now appear under \verb+/dev/data0+.
 
+\pagebreak
 \lstinputlisting[caption={data\_chr driver.},
 			 	 label={lst:data_chr}]
 	{../data_chr/data.c}
@@ -233,8 +240,90 @@ This device will now appear under \verb+/dev/fifo0+.
 %\lstinputlisting[linerange=26-30,
 %				firstnumber=26]{../hello/hello.c}
 
+% }}}
+
+% {{{ data_rw
+\clearpage
 \subsection{data\_rw}
+
+With the addition of read/write operations the device can be
+operated upon just like any other file.
+As an example the driver source code can be copied in to the
+device and then read back out.
+The result should be the same up to the maximum amount which
+in this case was 128 bytes.
+This maximum size is a \verb+#define+ inside the driver.
+
+\begin{verbatim}
+$ sudo dd if=data.c of=/dev/data0 bs=128 count=1
+
+$ sudo dd if=/dev/data0 of=output bs=128 count=1
+\end{verbatim}
+
+Listing \ref{lst:data_rw-diff} shows the differences compared to the
+previous \verb+data_chr+ driver.  An array of bytes has been added
+to the per device structure along with the current offset (lines 7-17).
+
+File operations for open, read, write and release have been added (lines 82-88).
+The release operation is called when a process closes the device file.
+
+When the file is opened the open function (lines 19-29) is called.
+The \verb+container_of+ function (line 23) is used to obtain a parent
+structure from a child structure\autocite[Pg. 79]{corbet2009linux}
+\autocite{kroah2005cont}.
+Recall that the per device structure, \verb+data_devp+ contains a
+\verb+cdev+ (line 14).
+\verb+container_of+ makes it possible to obtain the \verb+data_devp+
+from the \verb+cdev+.
+
+The open functions sets the offset to zero (line 24) when is the usual
+behavior when opening a file.
+
+The open function also stores the device structure under \verb+private_data+
+(line 26) so it is easy to access in the read/write functions.
+
+When data is read from the device file the read function (lines 31-52)
+is called.
+Since the amount of data that can be read is limited by \verb+MAX_DATA+
+the amount requested will be reduced it it is too large (lines 39-43).
+Then the \verb+copy_to_user+ function is used to attempt to transfer
+the data in to user space (lines 45-47).
+The \verb+copy_to_user+ also hecks to make sure that destination it is
+transferring to is valid for the given process.
+If the transfer was a success the new offset is stored (line 49)
+and then the number of bytes that were successfully transfered are
+returned (line 51).
+
+The write function (lines 54-70) has the same operation as read
+except in the opposite directory.
+Notice that the \verb+copy_from_user+ (line 68) function is used
+in this case.
+
+And since nothing needs to be done when the device is closed,
+the release function (lines 77-80) simply returns success.
+
+\pagebreak
+\lstinputlisting[caption={param\$ diff -u ../data\_chr/data.c data.c},
+			 	 label={lst:data_rw-diff}]
+	{../data_rw/diff}
+
+% }}}
+
+% {{{ data_sk
+\clearpage
 \subsection{data\_sk}
+
+To add support for the seek operation requires the addition of
+one more function along with its corresponding entry in the
+file operations.  Listing \ref{lst:data_sk-diff} shows the
+differences.
+
+\lstinputlisting[caption={param\$ diff -u ../data\_chr/data.c data.c},
+			 	 label={lst:data_sk-diff}]
+	{../data_sk/diff}
+
+% }}}
+
 \subsection{ioctlx}
 \subsection{null}
 \subsection{zero}
