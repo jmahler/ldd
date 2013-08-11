@@ -9,7 +9,7 @@ digraph ldd {
 	data_rw -> zero;
 	data_rw -> null;
 
-	data_rw -> ioctlx;
+	data_rw -> data_ioctl;
 
 	data_rw -> fifo_rw;
 	fifo_rw -> fifo_sysfs;
