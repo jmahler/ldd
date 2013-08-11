@@ -243,9 +243,6 @@ This device will now appear under \verb+/dev/data0+.
 	{../data_chr/data.c}
 
 
-%\lstinputlisting[linerange=26-30,
-%				firstnumber=26]{../hello/hello.c}
-
 % }}}
 
 % {{{ data_rw
@@ -331,14 +328,32 @@ differences.
 
 % }}}
 
+% {{{ data_ioctl
 \subsection{data\_ioctl}
 
 Using \verb+ioctl()+ for new designs is not recommended\autocite[Pg. 156]{corbet2009linux}\autocite{love2010linux}.
 Instead \verb+sysfs+ is preferred.
 While \verb+/proc+ is another option, it is also becoming obsolete in
 favor of \verb+sysfs+.
+Nonetheless it is still used so it is worth knowing how it works.
 
-The ioctl example has the fewest number of differences compared to
+Include with this driver is a test program (\verb+data_ioctl/test/ioctlx.c+).
+The driver allows the reset, read and write of a single global variable
+(\verb+x+) in the driver.
+The test program allows these operations to be performed.
+
+\begin{verbatim}
+data_ioctl$ cd test/
+test$ sudo ./ioctlx 10    # set value
+test$ sudo ./ioctlx       # read current value
+ 10
+test$ sudo ./ioctlx 0     # reset
+test$ sudo ./ioctlx
+ 0
+test$
+\end{verbatim}
+
+The \verb+data_ioctl+ driver has the fewest number of differences compared to
 the \verb+data_chr+ driver (Section \ref{sec:data_chr}) as shown
 in Listing \ref{lst:data_ioctl-diff}.
 The open (lines 10-19) and release (lines 75-78) are the same as
@@ -349,6 +364,8 @@ The first thing to notice is the use of "magic" (lines 23-25, 37).
 Magic is used to make the ioctl calls unique across the entire system
 which helps prevent inadvertent configuration if the wrong device is opened
 \autocite[Pg. 158]{corbet2009linux}.
+The user program must also contain the corresponding magic
+values as is done in the test program (Listing \ref{lst:data_ioctl-magic}).
 
 The three defines (lines 23-24) describe the supported ioctl operations.
 Any number of additional operations can be added.
@@ -365,6 +382,13 @@ It is either reset, read or written.
 			 	 label={lst:data_ioctl-diff}]
 	{../data_ioctl/diff}
 
+\lstinputlisting[linerange=9-19,
+				firstnumber=9,
+				caption={Corresponding "magic" in user program.},
+				label={lst:data_ioctl-magic}]
+	{../data_ioctl/test/ioctlx.c}
+
+% }}}
 
 \subsection{null}
 \subsection{zero}
