@@ -1,8 +1,3 @@
-
-#define DEVICE_NAME "null"
-
-#define DEBUG 1
-
 #include <linux/cdev.h>
 #include <linux/device.h>
 #include <linux/fs.h>
@@ -10,50 +5,42 @@
 #include <linux/slab.h>
 #include <linux/uaccess.h>
 
+#define DEVICE_NAME "null"
+
 static dev_t null_major;
-static int cdev_add_done;
+struct class *null_class;
+struct device *null_device;
 
 struct null_dev {
 	struct cdev cdev;
 } *null_devp;
 
-struct class *null_class;
-struct device *null_device;
 
-int null_open(struct inode* inode, struct file* filp)
+static int null_open(struct inode* inode, struct file* filp)
 {
 	struct null_dev *null_devp;
 
-	if (DEBUG) printk(KERN_ALERT "null_open()\n");
-
 	null_devp = container_of(inode->i_cdev, struct null_dev, cdev);
 
-	/* create access to devp from filp, filp is used in other operations */
 	filp->private_data = null_devp;
 
 	return 0;
 }
 
-ssize_t null_read(struct file *filp, char __user *buf, size_t count,
-					loff_t *f_pos)
+static ssize_t null_read(struct file *filp, char __user *buf,
+								size_t count, loff_t *f_pos)
 {
-	if (DEBUG) printk(KERN_ALERT "null_read(%zu)\n", count);
-
-	return 0;  /* EOF */
+	return 0;
 }
 
-ssize_t null_write(struct file *filp, const char __user *buf, size_t count,
-					loff_t *f_pos)
+static ssize_t null_write(struct file *filp, const char __user *buf,
+								size_t count, loff_t *f_pos)
 {
-	if (DEBUG) printk(KERN_ALERT "null_write(%zu)\n", count);
-
 	return count;
 }
 
-int null_release(struct inode *inode, struct file *filp)
+static int null_release(struct inode *inode, struct file *filp)
 {
-	if (DEBUG) printk(KERN_ALERT "null_release()\n");
-
 	return 0;
 }
 
@@ -65,64 +52,23 @@ struct file_operations null_fops = {
 	.release = null_release,
 };
 
-static void null_cleanup(void)
-{
-	if (DEBUG) printk(KERN_ALERT "null_cleanup()\n");
-
-	if (null_major) {
-		if (DEBUG) printk(KERN_ALERT "null: unregister_chrdev_region()\n");
-		unregister_chrdev_region(null_major, 1);
-	}
-
-	if (null_device) {
-		if (DEBUG) printk(KERN_ALERT "null: device_destroy()\n");
-		device_destroy(null_class, null_major);
-	}
-
-	if (cdev_add_done) {
-		if (DEBUG) printk(KERN_ALERT "null: cdev_del()\n");
-		cdev_del(&null_devp->cdev);
-	}
-
-	if (null_devp) {
-		if (DEBUG) printk(KERN_ALERT "null: kfree()\n");
-		kfree(null_devp);
-	}
-
-	if (null_class) {
-		if (DEBUG) printk(KERN_ALERT "null: class_destroy()\n");
-		class_destroy(null_class);
-	}
-}
-
 static int __init null_init(void)
 {
 	int err = 0;
 
-	if (DEBUG) printk(KERN_ALERT "null_init()\n");
-
-	/* defaults, tested by cleanup() */
-	null_major = 0;
-	null_class = NULL;
-	null_device = NULL;
-	null_devp = NULL;
-	cdev_add_done = 0;
-
-	if (alloc_chrdev_region(&null_major, 0, 1, DEVICE_NAME) < 0) {
+	err = alloc_chrdev_region(&null_major, 0, 1, DEVICE_NAME);
+	if (err < 0) {
 		printk(KERN_WARNING "Unable to register device\n");
-		err = -1;
-		goto out;
+		goto err_chrdev_region;
 	}
 
-	/* populate sysfs entries */
-	/* /sys/class/null/null0/ */
 	null_class = class_create(THIS_MODULE, DEVICE_NAME);
 
 	null_devp = kmalloc(sizeof(struct null_dev), GFP_KERNEL);
 	if (!null_devp) {
 		printk(KERN_WARNING "Unable to kmalloc null_devp\n");
 		err = -ENOMEM;
-		goto out;
+		goto err_malloc_null_devp;
 	}
 
 	cdev_init(&null_devp->cdev, &null_fops);
@@ -130,33 +76,46 @@ static int __init null_init(void)
 	err = cdev_add(&null_devp->cdev, null_major, 1);
 	if (err) {
 		printk(KERN_WARNING "cdev_add failed\n");
-		//err = err;
-		goto out;
-	} else {
-		cdev_add_done = 1;
+		goto err_cdev_add;
 	}
 
-	/* send uevents to udev, so it'll create /dev nodes */
-	/* /dev/null0 */
-	null_device = device_create(null_class, NULL, MKDEV(MAJOR(null_major), 0), NULL, "null%d",0);
+	null_device = device_create(null_class, NULL,
+							MKDEV(MAJOR(null_major), 0), NULL, "null%d",0);
+	if (IS_ERR(null_device)) {
+		printk(KERN_WARNING "device_create failed\n");
+		err = PTR_ERR(null_device);
+		goto err_device_create;
+	}
 
-	return 0;  /* success */
+	return 0;
 
-out:
-	null_cleanup();
+err_device_create:
+	cdev_del(&null_devp->cdev);
+err_cdev_add:
+	kfree(null_devp);
+err_malloc_null_devp:
+	class_destroy(null_class);
+	unregister_chrdev_region(null_major, 1);
+err_chrdev_region:
+
 	return err;
 }
 
 static void __exit null_exit(void)
 {
-	if (DEBUG) printk(KERN_ALERT "null_exit()\n");
+	device_destroy(null_class, null_major);
 
-	null_cleanup();
+	cdev_del(&null_devp->cdev);
+
+	kfree(null_devp);
+
+	class_destroy(null_class);
+
+	unregister_chrdev_region(null_major, 1);
 }
 
-MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Jeremiah Mahler <jmmahler@gmail.com>");
+MODULE_LICENSE("GPL");
 
 module_init(null_init);
 module_exit(null_exit);
-
