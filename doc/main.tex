@@ -88,10 +88,9 @@ If anything it is due to this lack of simplicity.
 The drivers described in this document aim to be simple and concise.
 Each one introduces as few concepts as possible.
 And each driver is a fully working example
-\footnote{If you think a driver might behave in a different way
-if you changed something, try it and see.
-This is a far better way to solidify your understanding than just
-following the authors examples.}.
+\footnote{Be creative with the examples.
+Try changing something and see what happens.
+Actively exploring in this way is a great way to solidify your understanding.}.
 Many of the drivers are built in stages.
 Each stage introduces a new concept.
 And the changes are concisely described showing the
@@ -390,8 +389,36 @@ It is either reset, read or written.
 
 % }}}
 
-\subsection{null}
-\subsection{zero}
+% {{{
+\subsection{/dev/null, /dev/zero}
+
+From what has been described so far it is easy construct a driver
+for the well known \verb+/dev/null+ and \verb+/dev/zero+ devices.
+
+The zero device is even simpler than the \verb+data_rw+ example
+(Section \ref{sec:data_rw}).
+The only real difference, other than names (\verb+data+ -$>$ \verb+null+),
+is the read and write operations as shown in Listing \ref{lst:null}.
+
+\lstinputlisting[linerange=30-40,
+				firstnumber=30,
+				caption={/dev/null read and write functions.},
+				label={lst:null}]
+	{../null/null.c}
+
+The read and write functions for the \verb+zero+ driver are also quite
+simple (Listing \ref{lst:zero}.
+The one new addition is the \verb+clear_user+ function.
+It behaves like the \verb+copy_to_user+ function except that it simply
+zeros out the users buffer.
+
+\lstinputlisting[linerange=30-44,
+				firstnumber=30,
+				caption={/dev/zero read and write functions.},
+				label={lst:zero}]
+	{../zero/zero.c}
+
+% }}}
 
 \section{Sysfs}
 \subsection{sysx\_file}
