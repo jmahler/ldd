@@ -184,7 +184,7 @@ On lines 13-19 and 25-30 it can be seen that the same message
 is printed \verb+howmany+ times.
 % }}}
 
-\section{Read/Write Data}
+\section{Character Devices}
 
 The \verb+data+ module allocates some memory which can
 then be read from and written to.
@@ -325,6 +325,26 @@ differences.
 			 	 label={lst:data_sk-diff}]
 	{../data_sk/diff}
 
+To test the seek operations a seek-able cat program named \verb+cats+
+has been created.
+
+\begin{verbatim}
+jeri@crowe:~/ldd/data_sk/test$ sudo wc -c /dev/data0
+128 /dev/data0
+jeri@crowe:~/ldd/data_sk/test$ sudo dd if=cats.c of=/dev/data0 bs=128 count=1
+jeri@crowe:~/ldd/data_sk/test$ sudo ./cats /dev/data0 END -28
+t the reset of 'file.txt'
+ *jeri@crowe:~/ldd/data_sk/test$ 
+jeri@crowe:~/ldd/data_sk/test$ sudo ./cats /dev/data0 SET 100
+t the reset of 'file.txt'
+ *jeri@crowe:~/ldd/data_sk/test$ exit
+\end{verbatim}
+
+Notice that the file is 128 bytes total.
+The output after seeking from the start forward 100 bytes produces
+the same result as seeking backward 28 bytes from the end.
+In this instance the device is operating correctly.
+
 % }}}
 
 % {{{ data_ioctl
@@ -389,8 +409,8 @@ It is either reset, read or written.
 
 % }}}
 
-% {{{
-\subsection{/dev/null, /dev/zero}
+% {{{ null, zero
+\subsection{null, zero}
 
 From what has been described so far it is easy construct a driver
 for the well known \verb+/dev/null+ and \verb+/dev/zero+ devices.
@@ -420,16 +440,19 @@ zeros out the users buffer.
 
 % }}}
 
+\subsection{fifo\_rw}
+
 \section{Sysfs}
 \subsection{sysx\_file}
 \subsection{sysx\_file2}
 \subsection{sysx\_group}
 \subsection{sysx\_ktype}
 \subsection{sysx\_ktype2}
+\subsection{data\_sysfs}
+\subsection{fifo\_sysfs}
 
 \section{Concurrency}
-\subsection{fifo\_rw}
-\subsection{fifo\_sysfs}
+\subsection{data\_xxx}
 \subsection{fifo\_xxx}
 \subsection{fifo\_fix}
 
