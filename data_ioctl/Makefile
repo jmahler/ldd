@@ -7,6 +7,9 @@ all:
 	echo $(EXTRA_CFLGAS)
 	make -C /lib/modules/$(path)/build M=$(PWD) modules
 
+diff:
+	diff -u ../data_chr/data.c data.c > diff; true
+
 clean:
 	make -C /lib/modules/$(path)/build M=$(PWD) clean
-
+	-rm -f diff

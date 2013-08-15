@@ -1,4 +1,4 @@
---- ../data_rw/data.c	2013-08-11 00:28:57.774964943 -0700
+--- ../data_rw/data.c	2013-08-14 11:09:14.759159167 -0700
 +++ data.c	2013-08-11 00:28:18.202964529 -0700
 @@ -76,6 +76,35 @@
  	return count;
@@ -44,3 +44,21 @@
  	.release = data_release,
  };
  
+@@ -105,7 +135,7 @@
+ 	if (!data_devp) {
+ 		printk(KERN_WARNING "Unable to kmalloc data_devp\n");
+ 		err = -ENOMEM;
+-		goto err_malloc_devp;
++		goto err_malloc_data_devp;
+ 	}
+ 
+ 	cdev_init(&data_devp->cdev, &data_fops);
+@@ -130,7 +160,7 @@
+ 	cdev_del(&data_devp->cdev);
+ err_cdev_add:
+ 	kfree(data_devp);
+-err_malloc_devp:
++err_malloc_data_devp:
+ 	class_destroy(data_class);
+ 	unregister_chrdev_region(data_major, 1);
+ err_chrdev_region:

@@ -1,0 +1,108 @@
+--- ../fifo_sysfs/fifo.c	2013-08-14 12:33:11.463355098 -0700
++++ fifo.c	2013-08-14 11:44:11.355240726 -0700
+@@ -1,7 +1,10 @@
+ #include <linux/cdev.h>
++#include <linux/delay.h>
+ #include <linux/device.h>
+ #include <linux/fs.h>
+ #include <linux/module.h>
++#include <linux/mutex.h>
++#include <linux/sched.h>
+ #include <linux/slab.h>
+ #include <linux/uaccess.h>
+ 
+@@ -22,6 +25,54 @@
+ 	int empty;
+ } *fifo_devp;
+ 
++static DEFINE_MUTEX(read_mtx);
++static DEFINE_MUTEX(write_mtx);
++
++#define HALF_SEC 500  /* ms */
++
++/* exaggerate race conditions by waiting for multiple processes */
++int in, mid, out;
++static void pwait(struct mutex mtx) {
++
++	// queue any threads beyond two
++	mutex_lock(&mtx);
++	in++;
++	mutex_unlock(&mtx);
++	while (1) {
++		mutex_lock(&mtx);
++		if (in <= 2) {
++			mutex_unlock(&mtx);
++			break;
++		}
++		mutex_unlock(&mtx);
++		msleep(HALF_SEC);
++	}
++
++	// wait for two threads to queue up
++	mutex_lock(&mtx);
++	mid++;
++	mutex_unlock(&mtx);
++	while (1) {
++		mutex_lock(&mtx);
++		if (mid == 2) {
++			mutex_unlock(&mtx);
++			break;
++		}
++		mutex_unlock(&mtx);
++		msleep(HALF_SEC);
++	}
++
++	// wait two threads to leave, reset counts
++	mutex_lock(&mtx);
++	out++;
++	if (out == 2) {
++		in -= 2;
++		mid = 0;
++		out = 0;
++	}
++	mutex_unlock(&mtx);
++}
++
+ int fifo_open(struct inode* inode, struct file* filp)
+ {
+ 	struct fifo_dev *fifo_devp;
+@@ -48,17 +99,24 @@
+ 			break;
+ 		}
+ 
++		pwait(read_mtx);
++
+ 		if (copy_to_user(buf, (void *) dev->read_ptr, 1) != 0) {
+ 			return -EIO;
+ 		}
+ 		left--;
+ 
++		pwait(read_mtx);
++
+ 		if (dev->read_ptr == dev->fifo_end) {
+ 			dev->read_ptr = dev->fifo_start;
++			pwait(read_mtx);
+ 		} else {
+ 			(dev->read_ptr)++;
++			pwait(read_mtx);
+ 		}
+ 
++		pwait(read_mtx);
+ 		if (dev->read_ptr == dev->write_ptr) {
+ 			dev->empty = 1;
+ 		}
+@@ -89,10 +147,14 @@
+ 		if (dev->empty)
+ 			dev->empty = 0;
+ 
++		pwait(write_mtx);
++
+ 		if (dev->write_ptr == dev->fifo_end) {
+ 			dev->write_ptr = dev->fifo_start;
++			pwait(write_mtx);
+ 		} else {
+ 			(dev->write_ptr)++;
++			pwait(write_mtx);
+ 		}
+ 	}
+ 
