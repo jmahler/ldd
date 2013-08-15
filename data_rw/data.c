@@ -105,7 +105,7 @@ static int __init data_init(void)
 	if (!data_devp) {
 		printk(KERN_WARNING "Unable to kmalloc data_devp\n");
 		err = -ENOMEM;
-		goto err_malloc_data_devp;
+		goto err_malloc_devp;
 	}
 
 	cdev_init(&data_devp->cdev, &data_fops);
@@ -130,7 +130,7 @@ err_device_create:
 	cdev_del(&data_devp->cdev);
 err_cdev_add:
 	kfree(data_devp);
-err_malloc_data_devp:
+err_malloc_devp:
 	class_destroy(data_class);
 	unregister_chrdev_region(data_major, 1);
 err_chrdev_region:

@@ -1,7 +1,3 @@
-
-#define DEVICE_NAME "fifo"
-#define MAX_DATA 3
-
 #include <linux/cdev.h>
 #include <linux/device.h>
 #include <linux/fs.h>
@@ -9,8 +5,10 @@
 #include <linux/slab.h>
 #include <linux/uaccess.h>
 
+#define DEVICE_NAME "fifo"
+#define MAX_DATA 3
+
 static dev_t fifo_major;
-static int cdev_add_done;
 struct class *fifo_class;
 struct device *fifo_device;
 
@@ -35,12 +33,12 @@ int fifo_open(struct inode* inode, struct file* filp)
 	return 0;
 }
 
-ssize_t fifo_read(struct file *filp, char __user *buf, size_t count,
+static ssize_t fifo_read(struct file *filp, char __user *buf, size_t count,
 					loff_t *f_pos)
 {
+	struct fifo_dev *dev = filp->private_data;
 	size_t left;
 
-	struct fifo_dev *dev = filp->private_data;
 
 	left = count;
 
@@ -69,12 +67,11 @@ ssize_t fifo_read(struct file *filp, char __user *buf, size_t count,
 	return (count - left);
 }
 
-ssize_t fifo_write(struct file *filp, const char __user *buf, size_t count,
+static ssize_t fifo_write(struct file *filp, const char __user *buf, size_t count,
 					loff_t *f_pos)
 {
-	size_t left;
-
 	struct fifo_dev *dev = filp->private_data;
+	size_t left;
 
 	left = count;
 
@@ -102,7 +99,7 @@ ssize_t fifo_write(struct file *filp, const char __user *buf, size_t count,
 	return (count - left);
 }
 
-int fifo_release(struct inode *inode, struct file *filp)
+static int fifo_release(struct inode *inode, struct file *filp)
 {
 	return 0;
 }
@@ -115,56 +112,23 @@ struct file_operations fifo_fops = {
 	.release = fifo_release,
 };
 
-static void fifo_cleanup(void)
-{
-	if (fifo_major) {
-		unregister_chrdev_region(fifo_major, 1);
-	}
-
-	if (fifo_device) {
-		device_destroy(fifo_class, fifo_major);
-	}
-
-	if (cdev_add_done) {
-		cdev_del(&fifo_devp->cdev);
-	}
-
-	if (fifo_devp) {
-		kfree(fifo_devp);
-	}
-
-	if (fifo_class) {
-		class_destroy(fifo_class);
-	}
-}
-
-
 static int __init fifo_init(void)
 {
 	int err = 0;
 
-	/* defaults, tested by cleanup() */
-	fifo_major = 0;
-	fifo_class = NULL;
-	fifo_device = NULL;
-	fifo_devp = NULL;
-	cdev_add_done = 0;
-
-	if (alloc_chrdev_region(&fifo_major, 0, 1, DEVICE_NAME) < 0) {
+	err = alloc_chrdev_region(&fifo_major, 0, 1, DEVICE_NAME);
+	if (err < 0) {
 		printk(KERN_WARNING "Unable to register device\n");
-		err = -1;
-		goto err_out;
+		goto err_chrdev_region;
 	}
 
-	/* populate sysfs entries */
-	/* /sys/class/fifo/fifo0/ */
 	fifo_class = class_create(THIS_MODULE, DEVICE_NAME);
 
 	fifo_devp = kmalloc(sizeof(struct fifo_dev), GFP_KERNEL);
 	if (!fifo_devp) {
 		printk(KERN_WARNING "Unable to kmalloc fifo_devp\n");
 		err = -ENOMEM;
-		goto err_out;
+		goto err_malloc_devp;
 	}
 
 	cdev_init(&fifo_devp->cdev, &fifo_fops);
@@ -179,29 +143,46 @@ static int __init fifo_init(void)
 	err = cdev_add(&fifo_devp->cdev, fifo_major, 1);
 	if (err) {
 		printk(KERN_WARNING "cdev_add failed\n");
-		goto err_out;
-	} else {
-		cdev_add_done = 1;
+		goto err_cdev_add;
 	}
 
-	/* send uevents to udev, so it'll create /dev nodes */
-	/* /dev/fifo0 */
-	fifo_device = device_create(fifo_class, NULL, MKDEV(MAJOR(fifo_major), 0), NULL, "fifo%d",0);
+	fifo_device = device_create(fifo_class, NULL,
+							MKDEV(MAJOR(fifo_major), 0), NULL, "fifo%d",0);
+	if (IS_ERR(fifo_device)) {
+		printk(KERN_WARNING "device_create failed\n");
+		err = PTR_ERR(fifo_device);
+		goto err_device_create;
+	}
 
 	return 0;  /* success */
 
-err_out:
-	fifo_cleanup();
+err_device_create:
+	cdev_del(&fifo_devp->cdev);
+err_cdev_add:
+	kfree(fifo_devp);
+err_malloc_devp:
+	class_destroy(fifo_class);
+	unregister_chrdev_region(fifo_major, 1);
+err_chrdev_region:
+
 	return err;
 }
 
 static void __exit fifo_exit(void)
 {
-	fifo_cleanup();
+	device_destroy(fifo_class, fifo_major);
+
+	cdev_del(&fifo_devp->cdev);
+
+	kfree(fifo_devp);
+
+	class_destroy(fifo_class);
+
+	unregister_chrdev_region(fifo_major, 1);
 }
 
-MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Jeremiah Mahler <jmmahler@gmail.com>");
+MODULE_LICENSE("GPL");
 
 module_init(fifo_init);
 module_exit(fifo_exit);
