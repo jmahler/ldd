@@ -20,6 +20,7 @@
 		language=C,
 		tabsize=4,
 		basicstyle=\ttfamily,
+		columns=fixed,
 		%basicstyle=\footnotesize,
 		showstringspaces=false,  % don't show the space character
 		%commentstyle=\textit,
@@ -96,6 +97,32 @@ Each stage introduces a new concept.
 And the changes are concisely described showing the
 differences (\verb+diff+).
 Figure \ref{fig:hier} shows the hierarchy of driver examples.
+
+These examples were built using Kernel version 3.9 and 3.10.
+They will likely work with other versions as well.
+The Linux kernel changes fast but it usually isn't difficult to
+determine what has changed and how it can be upgraded.
+
+Each of the modules includes a Makefile to automate the build steps.
+
+\begin{verbatim}
+$ cd hello/
+$ make
+(should compile without error)
+(and produce hello.ko)
+$
+\end{verbatim}
+
+It may be necessary to install the kernel sources before compiling.
+To do this under a Debian\autocite{debian} system the following steps
+can be used.
+
+\begin{verbatim}
+$ uname -r
+3.9-1-amd64
+$ apt-get install linux-source-3.9 linux-headers-3.9-1-amd64
+
+\end{verbatim}
 
 % }}}
 
