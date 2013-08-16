@@ -127,7 +127,7 @@ static ssize_t read_offset_store(struct device *dev,
 									const char *buf,
 									size_t count)
 {
-	return 0;  // stored nothing
+	return 0;  // cannot store anything
 }
 
 static DEVICE_ATTR(read_offset, 0666, read_offset_show, read_offset_store);
@@ -146,7 +146,7 @@ static ssize_t write_offset_store(struct device *dev,
 									const char *buf,
 									size_t count)
 {
-	return 0;
+	return 0;  // cannot store anything
 }
 
 static DEVICE_ATTR(write_offset, 0666, write_offset_show, write_offset_store);

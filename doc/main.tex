@@ -469,6 +469,7 @@ zeros out the users buffer.
 
 % {{{ fifo_rw
 \subsection{fifo\_rw}
+\label{sec:fifo_rw}
 
 A FIFO (first in first out) can be constructed as a character device.
 And it requires no new techniques beyond what was described for
@@ -527,13 +528,80 @@ have only algorithmic differences compared to the same operations in the
 
 \section{Sysfs}
 
+% {{{ fifo_sysfs
+
+\clearpage
+\subsection{fifo\_sysfs}
+
+The \verb+fifo_rw+ allowed values to be read and written.
+But there was no way to get any info about the fifo from user space.
+Things such as is it empty/full and where are the read/write pointers
+at?
+
+One way to create access to these metrics is with the use of Sysfs attributes.
+Sysfs is a file system representation of all the objects in the kernel.
+An ``attribute'' can be added to a kernel object (kobject) and
+that attribute can appear as a file in \verb+/sys/+ which allows it
+to be read from or written to.
+
+The first thing that must be added are the operations for reading
+and writing the attribute.
+For sysfs operations it is common to name them show and store instead
+of read and write (Listing \ref{lst:fifo_sysfs_show}).
+
+The \verb+DEVICE_ATTR+ macro is used to \verb+dev_attr+ structure which
+will be used later when creating the file.
+In this example \verb+write_offset+ (line 152) will create a variable named
+\verb+dev_attr_write_offset+.
+
+\lstinputlisting[linerange=116-152,
+				firstnumber=116,
+				caption={fifo\_sysfs driver show/store.},
+				label={lst:fifo_sysfs_show}]
+	{../fifo_sysfs/fifo.c}
+
+Additionally the \verb+device_create_file()+ function must be used
+to create the attribute files (Listing \ref{lst:fifo_sysfs_file}).
+Notice that the \verb+dev_attr_*+ variable the was created earlier
+is used along with \verb+fifo_device+ structure.
+
+\lstinputlisting[linerange=197-205,
+				firstnumber=197,
+				caption={fifo\_sysfs driver attribute file creation.},
+				label={lst:fifo_sysfs_file}]
+	{../fifo_sysfs/fifo.c}
+
+One thing that takes getting used to with Sysfs and kobject's is where
+things end up under \verb+/sys/+.
+It is often best to add the attributes to the most relevant object.
+Then they will usually end up in a place that makes sense.
+Trying to find the object that will place the file where you want it
+is not the correct approach.
+
+In this example the attributes end up under:
+
+\begin{verbatim}
+fifo_sysfs$ sudo find /sys -name 'read_offset'
+/sys/devices/virtual/fifo/fifo0/read_offset
+fifo_sysfs$ ls /sys/devices/virtual/fifo/fifo0
+dev  power  read_offset  subsystem  uevent  write_offset
+fifo_sysfs$ 
+\end{verbatim}
+
+Notice that both attributes that were created are there.
+There are also some extra attributes that were automatically
+created.
+
+
+% }}}
+
+\clearpage
 \subsection{sysx\_file}
 \subsection{sysx\_file2}
 \subsection{sysx\_group}
 \subsection{sysx\_ktype}
 \subsection{sysx\_ktype2}
 \subsection{data\_sysfs}
-\subsection{fifo\_sysfs}
 
 \section{Concurrency}
 \subsection{data\_xxx}
