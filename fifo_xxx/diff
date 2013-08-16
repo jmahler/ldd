@@ -1,5 +1,5 @@
---- ../fifo_sysfs/fifo.c	2013-08-14 12:33:11.463355098 -0700
-+++ fifo.c	2013-08-14 11:44:11.355240726 -0700
+--- ../fifo_sysfs/fifo.c	2013-08-16 00:04:03.966428656 -0700
++++ fifo.c	2013-08-16 14:51:47.770697191 -0700
 @@ -1,7 +1,10 @@
  #include <linux/cdev.h>
 +#include <linux/delay.h>
@@ -66,7 +66,7 @@
  int fifo_open(struct inode* inode, struct file* filp)
  {
  	struct fifo_dev *fifo_devp;
-@@ -48,17 +99,24 @@
+@@ -47,17 +98,24 @@
  			break;
  		}
  
@@ -91,7 +91,7 @@
  		if (dev->read_ptr == dev->write_ptr) {
  			dev->empty = 1;
  		}
-@@ -89,10 +147,14 @@
+@@ -88,10 +146,14 @@
  		if (dev->empty)
  			dev->empty = 0;
  

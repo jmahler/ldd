@@ -1,6 +1,6 @@
 --- ../data_rw/data.c	2013-08-14 11:09:14.759159167 -0700
-+++ fifo.c	2013-08-14 11:22:03.427189069 -0700
-@@ -5,154 +5,184 @@
++++ fifo.c	2013-08-16 00:04:03.966428656 -0700
+@@ -5,154 +5,183 @@
  #include <linux/slab.h>
  #include <linux/uaccess.h>
  
@@ -59,15 +59,14 @@
 -	cur_ofs = data_devp->cur_ofs;
 -	datp = data_devp->data;
 -	left = MAX_DATA - cur_ofs;
++	left = count;
  
 -	count = (count > left) ? left : count;
-+	left = count;
++	while (left) {
  
 -	if (copy_to_user(buf, (void *) (datp + cur_ofs), count) != 0) {
 -		return -EIO;
 -	}
-+	while (left) {
-+
 +		if (dev->empty) {
 +			break;
 +		}

@@ -90,7 +90,6 @@ static ssize_t fifo_read(struct file *filp, char __user *buf, size_t count,
 	struct fifo_dev *dev = filp->private_data;
 	size_t left;
 
-
 	left = count;
 
 	while (left) {
@@ -189,7 +188,7 @@ static ssize_t read_offset_store(struct device *dev,
 									const char *buf,
 									size_t count)
 {
-	return 0;  // stored nothing
+	return 0;  // cannot store anything
 }
 
 static DEVICE_ATTR(read_offset, 0666, read_offset_show, read_offset_store);
@@ -208,7 +207,7 @@ static ssize_t write_offset_store(struct device *dev,
 									const char *buf,
 									size_t count)
 {
-	return 0;
+	return 0;  // cannot store anything
 }
 
 static DEVICE_ATTR(write_offset, 0666, write_offset_show, write_offset_store);
@@ -256,6 +255,11 @@ static int __init fifo_init(void)
 		goto err_device_create;
 	}
 
+	err = dev_set_drvdata(fifo_device, fifo_devp);
+	if (err) {
+		goto err_set_drvdata;
+	}
+
 	err = device_create_file(fifo_device, &dev_attr_read_offset);
 	if (err) {
 		goto err_file_read_offset;
@@ -268,10 +272,11 @@ static int __init fifo_init(void)
 
 	return 0;  /* success */
 
+err_file_write_offset:
 	//device_remove_file(fifo_device, &dev_attr_write_offset);
 err_file_read_offset:
 	device_remove_file(fifo_device, &dev_attr_read_offset);
-err_file_write_offset:
+err_set_drvdata:
 	device_destroy(fifo_class, fifo_major);
 err_device_create:
 	cdev_del(&fifo_devp->cdev);
