@@ -39,7 +39,6 @@ static ssize_t fifo_read(struct file *filp, char __user *buf, size_t count,
 	struct fifo_dev *dev = filp->private_data;
 	size_t left;
 
-
 	left = count;
 
 	while (left) {
