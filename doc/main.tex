@@ -467,9 +467,66 @@ zeros out the users buffer.
 
 % }}}
 
+% {{{ fifo_rw
 \subsection{fifo\_rw}
 
+A FIFO (first in first out) can be constructed as a character device.
+And it requires no new techniques beyond what was described for
+the data driver (Section \ref{sec:data_rw}).
+
+Several test programs are included (\verb+test/+) to simplify
+experimenting with the fifo device.
+The \verb+fifor+ and \verb+fifow+ programs can
+be used to read and write numbers to the device.
+
+The following example writes three numbers to an empty fifo.
+Then it reads out the three numbers.  And as a check it tries
+to read three more but since it is now empty none are displayed.
+The maximum data (\verb+#define MAX_DATA+, line 9) is three so
+any written beyond this amount are discarded.
+
+\begin{verbatim}
+test$ sudo ./fifow 1 2 3
+test$ sudo ./fifor 3
+1
+2
+3
+test$ sudo ./fifor 3
+test$
+\end{verbatim}
+
+The code for the \verb+fifo_rw+ is largely the same as the \verb+data_rw+
+driver.
+The fifo is built using read and write pointers along with an empty flag.
+When the module is initialized these values are
+set (Listing \ref{lst:fifo_rw_init}).
+
+\lstinputlisting[linerange=137-141,
+				firstnumber=137,
+				caption={fifo\_rw driver init.},
+				label={lst:fifo_rw_init}]
+	{../fifo_rw/fifo.c}
+
+The read and write functions
+(Listing \ref{lst:fifo_rw_read} and \ref{lst:fifo_rw_write})
+have only algorithmic differences compared to the same operations in the
+\verb+data_rw+ driver.
+
+\lstinputlisting[linerange=36-68,
+				firstnumber=36,
+				caption={fifo\_rw driver read function.},
+				label={lst:fifo_rw_read}]
+	{../fifo_rw/fifo.c}
+
+\lstinputlisting[linerange=70-100,
+				firstnumber=70,
+				caption={fifo\_rw driver write function.},
+				label={lst:fifo_rw_write}]
+	{../fifo_rw/fifo.c}
+% }}}
+
 \section{Sysfs}
+
 \subsection{sysx\_file}
 \subsection{sysx\_file2}
 \subsection{sysx\_group}
