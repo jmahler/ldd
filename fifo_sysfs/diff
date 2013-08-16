@@ -1,6 +1,6 @@
---- ../fifo_rw/fifo.c	2013-08-14 11:22:03.427189069 -0700
-+++ fifo.c	2013-08-14 12:33:11.463355098 -0700
-@@ -112,6 +112,44 @@
+--- ../fifo_rw/fifo.c	2013-08-15 10:59:49.775723838 -0700
++++ fifo.c	2013-08-15 20:40:55.188111908 -0700
+@@ -112,6 +112,46 @@
  	.release = fifo_release,
  };
  
@@ -10,7 +10,8 @@
 +								char *buf)
 +{
 +	struct fifo_dev *fifo_devp = dev_get_drvdata(dev);
-+	return sprintf(buf, "%lu\n", fifo_devp->read_ptr - fifo_devp->fifo_start);
++	return sprintf(buf, "%u\n", (unsigned int) (fifo_devp->read_ptr
++													- fifo_devp->fifo_start));
 +}
 +
 +static ssize_t read_offset_store(struct device *dev,
@@ -28,7 +29,8 @@
 +								char *buf)
 +{
 +	struct fifo_dev *fifo_devp = dev_get_drvdata(dev);
-+	return sprintf(buf, "%lu\n", fifo_devp->write_ptr - fifo_devp->fifo_start);
++	return sprintf(buf, "%u\n", (unsigned int) (fifo_devp->write_ptr
++													- fifo_devp->fifo_start));
 +}
 +
 +static ssize_t write_offset_store(struct device *dev,
@@ -45,7 +47,7 @@
  static int __init fifo_init(void)
  {
  	int err = 0;
-@@ -154,8 +192,23 @@
+@@ -154,8 +194,23 @@
  		goto err_device_create;
  	}
  
@@ -69,7 +71,7 @@
  err_device_create:
  	cdev_del(&fifo_devp->cdev);
  err_cdev_add:
-@@ -170,6 +223,10 @@
+@@ -170,6 +225,10 @@
  
  static void __exit fifo_exit(void)
  {
