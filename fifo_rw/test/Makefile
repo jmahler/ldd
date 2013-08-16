@@ -1,5 +1,5 @@
 
-OBJS := fifotst1 fifor fifow
+OBJS := fifor fifow
 
 ARGV := -Wall -Wextra -O2 -g
 
