@@ -1,9 +1,14 @@
 
-all: main.pdf
+#
+# The following packages were required
+# to build # on a Debian system:
+#
+#   biblatex
+#   texlive-latex-extra
+#   texlive-fonts-recommended
+#
 
-# XXX - does not generate bibtex entries correctly
-#%.pdf: %.tex
-#	rubber -v --pdf $<
+all: main.pdf
 
 # If an errors occurs it will hang.
 # Manually run the command again to see the error.
