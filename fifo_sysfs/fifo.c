@@ -118,7 +118,8 @@ static ssize_t read_offset_show(struct device *dev,
 								char *buf)
 {
 	struct fifo_dev *fifo_devp = dev_get_drvdata(dev);
-	return sprintf(buf, "%lu\n", fifo_devp->read_ptr - fifo_devp->fifo_start);
+	return sprintf(buf, "%u\n", (unsigned int) (fifo_devp->read_ptr
+													- fifo_devp->fifo_start));
 }
 
 static ssize_t read_offset_store(struct device *dev,
@@ -136,7 +137,8 @@ static ssize_t write_offset_show(struct device *dev,
 								char *buf)
 {
 	struct fifo_dev *fifo_devp = dev_get_drvdata(dev);
-	return sprintf(buf, "%lu\n", fifo_devp->write_ptr - fifo_devp->fifo_start);
+	return sprintf(buf, "%u\n", (unsigned int) (fifo_devp->write_ptr
+													- fifo_devp->fifo_start));
 }
 
 static ssize_t write_offset_store(struct device *dev,
