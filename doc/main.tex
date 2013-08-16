@@ -592,6 +592,29 @@ Notice that both attributes that were created are there.
 There are also some extra attributes that were automatically
 created.
 
+Using these new attributes the test programs from the \verb+fifo_rw+
+driver can be used to test it out.  When the read offset is the
+same as the write offset it is either completely full or empty.
+
+\begin{verbatim}
+test$ cat /sys/devices/virtual/fifo/fifo0/read_offset 
+0
+test$ cat /sys/devices/virtual/fifo/fifo0/write_offset 
+0
+test$ sudo ./fifow 1 2
+test$ cat /sys/devices/virtual/fifo/fifo0/read_offset 
+0
+test$ cat /sys/devices/virtual/fifo/fifo0/write_offset 
+2
+test$ sudo ./fifor 1
+1
+test$ cat /sys/devices/virtual/fifo/fifo0/read_offset 
+1
+test$ cat /sys/devices/virtual/fifo/fifo0/write_offset 
+2
+test$ sudo ./fifor 1
+2
+\end{verbatim}
 
 % }}}
 
