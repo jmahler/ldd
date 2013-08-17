@@ -23,6 +23,7 @@ struct fifo_dev {
 	char *fifo_start;
 	char *fifo_end;
 	int empty;
+	struct mutex ferw_mtx;  // ferw = fifo, empty, read, write
 } *fifo_devp;
 
 int fifo_open(struct inode* inode, struct file* filp)
@@ -79,11 +80,16 @@ static ssize_t fifo_read(struct file *filp, char __user *buf,
 	while (left) {
 
 		pwait_fifo_read();
+
+		mutex_lock(&dev->ferw_mtx);
+
 		if (dev->empty) {
+			mutex_unlock(&dev->ferw_mtx);
 			break;
 		}
 
 		if (copy_to_user(buf, (void *) dev->read_ptr, 1) != 0) {
+			mutex_unlock(&dev->ferw_mtx);
 			return -EIO;
 		}
 		left--;
@@ -97,6 +103,7 @@ static ssize_t fifo_read(struct file *filp, char __user *buf,
 		if (dev->read_ptr == dev->write_ptr) {
 			dev->empty = 1;
 		}
+		mutex_unlock(&dev->ferw_mtx);
 	}
 
 	return (count - left);
@@ -117,11 +124,15 @@ static ssize_t fifo_write(struct file *filp, const char __user *buf,
 
 		pwait_fifo_write();
 
+		mutex_lock(&dev->ferw_mtx);
+
 		if (!(dev->empty) && (dev->read_ptr == dev->write_ptr)) {
+			mutex_unlock(&dev->ferw_mtx);
 			break;
 		}
 
 		if (copy_from_user((void *) dev->write_ptr, buf, 1) != 0) {
+			mutex_unlock(&dev->ferw_mtx);
 			return -EIO;
 		}
 		left--;
@@ -134,6 +145,7 @@ static ssize_t fifo_write(struct file *filp, const char __user *buf,
 		} else {
 			(dev->write_ptr)++;
 		}
+		mutex_unlock(&dev->ferw_mtx);
 	}
 
 	return (count - left);
@@ -219,6 +231,8 @@ static int __init fifo_init(void)
 	fifo_devp->read_ptr = &fifo_devp->fifo[0];
 	fifo_devp->write_ptr = &fifo_devp->fifo[0];
 	fifo_devp->empty = 1;
+
+	mutex_init(&fifo_devp->ferw_mtx);
 
 	err = cdev_add(&fifo_devp->cdev, fifo_major, 1);
 	if (err) {
