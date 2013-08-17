@@ -25,54 +25,6 @@ struct fifo_dev {
 	int empty;
 } *fifo_devp;
 
-static DEFINE_MUTEX(read_mtx);
-static DEFINE_MUTEX(write_mtx);
-
-#define HALF_SEC 500  /* ms */
-
-/* exaggerate race conditions by waiting for multiple processes */
-int in, mid, out;
-static void pwait(struct mutex mtx) {
-
-	// queue any threads beyond two
-	mutex_lock(&mtx);
-	in++;
-	mutex_unlock(&mtx);
-	while (1) {
-		mutex_lock(&mtx);
-		if (in <= 2) {
-			mutex_unlock(&mtx);
-			break;
-		}
-		mutex_unlock(&mtx);
-		msleep(HALF_SEC);
-	}
-
-	// wait for two threads to queue up
-	mutex_lock(&mtx);
-	mid++;
-	mutex_unlock(&mtx);
-	while (1) {
-		mutex_lock(&mtx);
-		if (mid == 2) {
-			mutex_unlock(&mtx);
-			break;
-		}
-		mutex_unlock(&mtx);
-		msleep(HALF_SEC);
-	}
-
-	// wait two threads to leave, reset counts
-	mutex_lock(&mtx);
-	out++;
-	if (out == 2) {
-		in -= 2;
-		mid = 0;
-		out = 0;
-	}
-	mutex_unlock(&mtx);
-}
-
 int fifo_open(struct inode* inode, struct file* filp)
 {
 	struct fifo_dev *fifo_devp;
@@ -84,8 +36,40 @@ int fifo_open(struct inode* inode, struct file* filp)
 	return 0;
 }
 
-static ssize_t fifo_read(struct file *filp, char __user *buf, size_t count,
-					loff_t *f_pos)
+#define DEFINE_PWAIT(uid)													\
+																			\
+static DEFINE_MUTEX(in_mtx_##uid);											\
+static DEFINE_MUTEX(out_mtx_##uid);											\
+																			\
+static void pwait_##uid(void) {												\
+	static int in = 0;														\
+	static int out = 0;														\
+																			\
+	mutex_lock(&in_mtx_##uid);												\
+	if (++in >= 2) {														\
+		mutex_lock(&out_mtx_##uid);											\
+		out += 2;															\
+		mutex_unlock(&out_mtx_##uid);										\
+		in -= 2;															\
+	}																		\
+	mutex_unlock(&in_mtx_##uid);											\
+																			\
+	do {																	\
+		mutex_lock(&out_mtx_##uid);											\
+		if (out) {															\
+			out -= 1;														\
+			mutex_unlock(&out_mtx_##uid);									\
+			break;															\
+		}																	\
+		mutex_unlock(&out_mtx_##uid);										\
+	} while (1);															\
+}
+
+DEFINE_PWAIT(fifo_read);
+
+static ssize_t fifo_read(struct file *filp, char __user *buf,
+							size_t count,
+							loff_t *f_pos)
 {
 	struct fifo_dev *dev = filp->private_data;
 	size_t left;
@@ -98,24 +82,19 @@ static ssize_t fifo_read(struct file *filp, char __user *buf, size_t count,
 			break;
 		}
 
-		pwait(read_mtx);
+		pwait_fifo_read();
 
 		if (copy_to_user(buf, (void *) dev->read_ptr, 1) != 0) {
 			return -EIO;
 		}
 		left--;
 
-		pwait(read_mtx);
-
 		if (dev->read_ptr == dev->fifo_end) {
 			dev->read_ptr = dev->fifo_start;
-			pwait(read_mtx);
 		} else {
 			(dev->read_ptr)++;
-			pwait(read_mtx);
 		}
 
-		pwait(read_mtx);
 		if (dev->read_ptr == dev->write_ptr) {
 			dev->empty = 1;
 		}
@@ -124,8 +103,11 @@ static ssize_t fifo_read(struct file *filp, char __user *buf, size_t count,
 	return (count - left);
 }
 
-static ssize_t fifo_write(struct file *filp, const char __user *buf, size_t count,
-					loff_t *f_pos)
+DEFINE_PWAIT(fifo_write);
+
+static ssize_t fifo_write(struct file *filp, const char __user *buf,
+							size_t count,
+							loff_t *f_pos)
 {
 	struct fifo_dev *dev = filp->private_data;
 	size_t left;
@@ -133,6 +115,8 @@ static ssize_t fifo_write(struct file *filp, const char __user *buf, size_t coun
 	left = count;
 
 	while (left) {
+
+		pwait_fifo_write();
 
 		if (!(dev->empty) && (dev->read_ptr == dev->write_ptr)) {
 			break;
@@ -146,14 +130,10 @@ static ssize_t fifo_write(struct file *filp, const char __user *buf, size_t coun
 		if (dev->empty)
 			dev->empty = 0;
 
-		pwait(write_mtx);
-
 		if (dev->write_ptr == dev->fifo_end) {
 			dev->write_ptr = dev->fifo_start;
-			pwait(write_mtx);
 		} else {
 			(dev->write_ptr)++;
-			pwait(write_mtx);
 		}
 	}
 
