@@ -502,8 +502,8 @@ The fifo is built using read and write pointers along with an empty flag.
 When the module is initialized these values are
 set (Listing \ref{lst:fifo_rw_init}).
 
-\lstinputlisting[linerange=137-141,
-				firstnumber=137,
+\lstinputlisting[linerange=138-142,
+				firstnumber=138,
 				caption={fifo\_rw driver init.},
 				label={lst:fifo_rw_init}]
 	{../fifo_rw/fifo.c}
@@ -531,8 +531,8 @@ true (Listing \ref{lst:fifo_rw_read}, lines 61-62).
 	{../fifo_rw/fifo.c}
 
 \lstinputlisting[float=htpb,
-				linerange=69-100,
-				firstnumber=69,
+				linerange=70-101,
+				firstnumber=70,
 				caption={fifo\_rw driver write function.},
 				label={lst:fifo_rw_write}]
 	{../fifo_rw/fifo.c}
@@ -568,8 +568,8 @@ In this example \verb+read_offset+ (line 132) will create a variable named
 \verb+dev_attr_read_offset+.
 
 \lstinputlisting[float=htpb,
-				linerange=116-152,
-				firstnumber=116,
+				linerange=117-153,
+				firstnumber=117,
 				caption={fifo\_sysfs driver show/store.},
 				label={lst:fifo_sysfs_show}]
 	{../fifo_sysfs/fifo.c}
@@ -589,8 +589,8 @@ Notice that the \verb+dev_attr_*+ variable the was created earlier
 is used along with \verb+fifo_device+ structure.
 
 \lstinputlisting[float=htpb,
-				linerange=201-209,
-				firstnumber=201,
+				linerange=203-211,
+				firstnumber=203,
 				caption={fifo\_sysfs driver attribute file creation.},
 				label={lst:fifo_sysfs_file}]
 	{../fifo_sysfs/fifo.c}
@@ -645,6 +645,138 @@ And a read will increase the read pointer by the number
 of values read.
 
 % }}}
+
+\clearpage
+\section{Concurrency}
+
+For the sake of simplicity the examples up to this point have
+ignored concurrency issues.
+When multiple processes access a shared resource without restriction
+(such as with mutexes or semaphores) the resulting race conditions
+can wreak havoc.
+For example if a pointer offset was incremented beyond its maximum
+a write could easily crash the system.
+
+Even if multiple processes access a resource the negative effects of
+race conditions may still be unlikely and difficult to reproduce.
+The technique used here is to first add code which makes the negative
+effects virtually guaranteed.
+And then it is shown how these problems can be fixed.
+
+\subsection{fifo\_xxx}
+
+To magnify the effects of race conditions in the fifo driver
+a pwait() function has been created.
+This function forces the driver to wait for two processes
+to arrive at that point before allowing them to proceeding on.
+Listing \ref{lst:fifo_xxx-pwait} shows the additions.
+
+\lstinputlisting[float=htbp,
+				linerange=47-78,
+				firstnumber=47,
+				caption={Added pwait\_*() to fifo.c driver to create race
+					conditions.},
+				label={lst:fifo_xxx-pwait}]
+	{../fifo_xxx/diff}
+
+\begin{samepage}
+While the addition of \verb+pwait_*()+ certainly magnifies the negative
+effects of race conditions it still has a degree of unpredictability.
+Inconsistent results are easily produced but the actual results vary.
+
+In the following example two terminals are used to read and write values.
+From terminal 1 the values 10 and 11 are written.
+And at the same time terminal 2 writes the value 20 and 21.
+Then they both try to read out all three of the stored values.
+
+\begin{verbatim}
+test$ cat /sys/devices/virtual/fifo/fifo0/read_offset
+0
+test$ cat /sys/devices/virtual/fifo/fifo0/write_offset
+0
+
+test$ # (terminal 1)
+test$ sudo ./fifow 10
+
+test$ # (terminal 2)
+test$ sudo ./fifow 20
+
+test$ # (terminal 1)
+test$ sudo ./fifow 11
+
+test$ # (terminal 2)
+test$ sudo ./fifow 21
+
+test$ # (terminal 1)
+test$ sudo ./fifor 3
+10
+20
+
+test$ # (terminal 2)
+test$ sudo ./fifor 3
+20
+11
+
+test$ cat /sys/devices/virtual/fifo/fifo0/read_offset
+1
+test$ cat /sys/devices/virtual/fifo/fifo0/write_offset
+0
+
+test$ # (terminal 1)
+test$ sudo ./fifor 3
+test$ # (terminal 2)
+test$ sudo ./fifor 3
+test$ # (empty?)
+
+\end{verbatim}
+
+It should be apparent that this driver has concurrency problems.
+Four values were read out in total which is impossible since
+the fifo size is three.
+The value 20 was read twice.
+And this reading of three values should have emptied the fifo
+yet the offsets indicate otherwise since they are unequal.
+Attempting to read more values indicates that it is empty.
+The fifo should never have the empty flag set with non-equal
+read and write offsets.
+\end{samepage}
+
+The code that is used to create these race conditions is interesting
+because it uses mutexes (Listing \ref{lst:fifo_xxx-dpwait}).
+Mutexes will be used to fix this code so that it doesn't suffer
+from race condtions.
+
+The first thing to notice about the code (Listing \ref{lst:fifo_xxx-dpwait})
+is that it is a macro with a \verb+uid+ substitution.
+Every place which has a \verb+##uid+ will be substituted with the
+given unique id.
+This uniqueness is needed to create unique mutexes.
+This macro will create a function which can then be called.
+For example \verb+DEFINE_PWAIT(read_fifo)+ results in the function
+\verb+pwait_read_fifo()+.
+
+The code works by using the variables \verb+in+ and \verb+out+.
+Each process that enters the code and increments \verb+in+.
+When \verb+in+ reaches two, two ins are removed and two outs are added
+indicating that two process may leave.
+Any process that leaves decrements \verb+out+.
+
+Mutexes are used to limit access to each of the \verb+in+ and
+\verb+out+ variables to only one process.
+The code on lines 57-65 is an interesting example.
+At first glance it may appear that the out mutex could be unlocked
+twice.
+But in fact the inner unlock is necessary because the break would
+skip the outer unlock.
+Forgetting the inner unlock would result in a deadlock since that lock
+would never be unlocked.
+
+\lstinputlisting[float=htbp,
+				linerange=39-66,
+				firstnumber=39,
+				caption={pwait function used to creat race conditions in fifo\_xxx driver.},
+				label={lst:fifo_xxx-dpwait}]
+	{../fifo_xxx/fifo.c}
 
 \pagebreak
 \printbibliography
