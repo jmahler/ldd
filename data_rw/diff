@@ -1,5 +1,5 @@
 --- ../data_chr/data.c	2013-08-10 10:17:01.359016284 -0700
-+++ data.c	2013-08-14 11:09:14.759159167 -0700
++++ data.c	2013-08-16 21:55:03.833816746 -0700
 @@ -6,6 +6,7 @@
  #include <linux/uaccess.h>
  
@@ -8,7 +8,7 @@
  
  static dev_t data_major;
  struct class *data_class;
-@@ -13,10 +14,79 @@
+@@ -13,10 +14,81 @@
  
  struct data_dev {
  	struct cdev cdev;
@@ -28,8 +28,9 @@
 +	return 0;
 +}
 +
-+static ssize_t data_read(struct file *filp, char __user *buf, size_t count,
-+					loff_t *f_pos)
++static ssize_t data_read(struct file *filp, char __user *buf,
++							size_t count,
++							loff_t *f_pos)
 +{
 +	struct data_dev *data_devp = filp->private_data;
 +	loff_t cur_ofs;
@@ -51,8 +52,9 @@
 +	return count;
 +}
 +
-+static ssize_t data_write(struct file *filp, const char __user *buf, size_t count,
-+					loff_t *f_pos)
++static ssize_t data_write(struct file *filp, const char __user *buf,
++							size_t count,
++							loff_t *f_pos)
 +{
 +	struct data_dev *data_devp = filp->private_data;
 +	loff_t cur_ofs;
@@ -88,7 +90,7 @@
  };
  
  static int __init data_init(void)
-@@ -35,7 +105,7 @@
+@@ -35,7 +107,7 @@
  	if (!data_devp) {
  		printk(KERN_WARNING "Unable to kmalloc data_devp\n");
  		err = -ENOMEM;
@@ -97,7 +99,7 @@
  	}
  
  	cdev_init(&data_devp->cdev, &data_fops);
-@@ -60,7 +130,7 @@
+@@ -60,7 +132,7 @@
  	cdev_del(&data_devp->cdev);
  err_cdev_add:
  	kfree(data_devp);

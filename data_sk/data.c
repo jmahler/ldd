@@ -30,8 +30,9 @@ static int data_open(struct inode* inode, struct file* filp)
 	return 0;
 }
 
-static ssize_t data_read(struct file *filp, char __user *buf, size_t count,
-					loff_t *f_pos)
+static ssize_t data_read(struct file *filp, char __user *buf,
+							size_t count,
+							loff_t *f_pos)
 {
 	struct data_dev *data_devp = filp->private_data;
 	loff_t cur_ofs;
@@ -53,8 +54,9 @@ static ssize_t data_read(struct file *filp, char __user *buf, size_t count,
 	return count;
 }
 
-static ssize_t data_write(struct file *filp, const char __user *buf, size_t count,
-					loff_t *f_pos)
+static ssize_t data_write(struct file *filp, const char __user *buf,
+							size_t count,
+							loff_t *f_pos)
 {
 	struct data_dev *data_devp = filp->private_data;
 	loff_t cur_ofs;

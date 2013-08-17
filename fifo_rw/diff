@@ -1,6 +1,6 @@
 --- ../data_rw/data.c	2013-08-14 11:09:14.759159167 -0700
-+++ fifo.c	2013-08-16 00:04:03.966428656 -0700
-@@ -5,154 +5,183 @@
++++ fifo.c	2013-08-16 21:53:29.173820027 -0700
+@@ -5,154 +5,185 @@
  #include <linux/slab.h>
  #include <linux/uaccess.h>
  
@@ -47,8 +47,10 @@
  }
  
 -static ssize_t data_read(struct file *filp, char __user *buf, size_t count,
-+static ssize_t fifo_read(struct file *filp, char __user *buf, size_t count,
- 					loff_t *f_pos)
+-					loff_t *f_pos)
++static ssize_t fifo_read(struct file *filp, char __user *buf,
++							size_t count,
++							loff_t *f_pos)
  {
 -	struct data_dev *data_devp = filp->private_data;
 -	loff_t cur_ofs;
@@ -93,8 +95,10 @@
  }
  
 -static ssize_t data_write(struct file *filp, const char __user *buf, size_t count,
-+static ssize_t fifo_write(struct file *filp, const char __user *buf, size_t count,
- 					loff_t *f_pos)
+-					loff_t *f_pos)
++static ssize_t fifo_write(struct file *filp, const char __user *buf,
++							size_t count,
++							loff_t *f_pos)
  {
 -	struct data_dev *data_devp = filp->private_data;
 -	loff_t cur_ofs;
