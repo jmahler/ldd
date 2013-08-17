@@ -33,8 +33,9 @@ int fifo_open(struct inode* inode, struct file* filp)
 	return 0;
 }
 
-static ssize_t fifo_read(struct file *filp, char __user *buf, size_t count,
-					loff_t *f_pos)
+static ssize_t fifo_read(struct file *filp, char __user *buf,
+							size_t count,
+							loff_t *f_pos)
 {
 	struct fifo_dev *dev = filp->private_data;
 	size_t left;
@@ -66,8 +67,9 @@ static ssize_t fifo_read(struct file *filp, char __user *buf, size_t count,
 	return (count - left);
 }
 
-static ssize_t fifo_write(struct file *filp, const char __user *buf, size_t count,
-					loff_t *f_pos)
+static ssize_t fifo_write(struct file *filp, const char __user *buf,
+							size_t count,
+							loff_t *f_pos)
 {
 	struct fifo_dev *dev = filp->private_data;
 	size_t left;

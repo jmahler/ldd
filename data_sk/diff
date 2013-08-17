@@ -1,6 +1,6 @@
---- ../data_rw/data.c	2013-08-14 11:09:14.759159167 -0700
-+++ data.c	2013-08-11 00:28:18.202964529 -0700
-@@ -76,6 +76,35 @@
+--- ../data_rw/data.c	2013-08-16 21:55:03.833816746 -0700
++++ data.c	2013-08-16 21:56:15.829814250 -0700
+@@ -78,6 +78,35 @@
  	return count;
  }
  
@@ -36,7 +36,7 @@
  static int data_release(struct inode *inode, struct file *filp)
  {
  	return 0;
-@@ -86,6 +115,7 @@
+@@ -88,6 +117,7 @@
  	.open = data_open,
  	.read = data_read,
  	.write = data_write,
@@ -44,7 +44,7 @@
  	.release = data_release,
  };
  
-@@ -105,7 +135,7 @@
+@@ -107,7 +137,7 @@
  	if (!data_devp) {
  		printk(KERN_WARNING "Unable to kmalloc data_devp\n");
  		err = -ENOMEM;
@@ -53,7 +53,7 @@
  	}
  
  	cdev_init(&data_devp->cdev, &data_fops);
-@@ -130,7 +160,7 @@
+@@ -132,7 +162,7 @@
  	cdev_del(&data_devp->cdev);
  err_cdev_add:
  	kfree(data_devp);
