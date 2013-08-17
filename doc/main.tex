@@ -663,6 +663,7 @@ The technique used here is to first add code which makes the negative
 effects virtually guaranteed.
 And then it is shown how these problems can be fixed.
 
+% {{{ fifo_xxx
 \subsection{fifo\_xxx}
 
 To magnify the effects of race conditions in the fifo driver
@@ -777,6 +778,107 @@ would never be unlocked.
 				caption={pwait function used to creat race conditions in fifo\_xxx driver.},
 				label={lst:fifo_xxx-dpwait}]
 	{../fifo_xxx/fifo.c}
+
+% }}}
+
+\subsection{fifo\_fix}
+
+The race conditions that ruined the operation of the \verb+fifo_xxx+
+can be fixed using a single mutex.
+In other situations it might be beneficial to make the control more
+fine grained with multiple mutexes.
+But in this example simplicity was important.
+
+The first change that was made was to add a mutex to the
+device structure (Listing \ref{lst:fifo_fix-devp}).
+Some may wonder why this mutex was made device specific instead of global.
+In this simple example either way would work.
+But it is common to have multiple devices in which case it would be
+undesireable for a mutex on one device to inhibit the operation on
+some other device.
+
+\lstinputlisting[float=htbp,
+				linerange=1-9,
+				firstnumber=1,
+				caption={Mutex added to device structure.},
+				label={lst:fifo_fix-devp}]
+	{../fifo_fix/diff}
+
+The code added to the read and write operations are nearly identical.
+Listing \ref{lst:fifo_fix-read} shows the read operation differences.
+The mutex is locked just before the code which must read or write the
+shared variables.
+And the mutex must be unlocked before this scope is exited.
+
+\lstinputlisting[float=htbp,
+				linerange=11-35,
+				firstnumber=11,
+				caption={Mutex added to read operation.
+				Write operation is similar},
+				label={lst:fifo_fix-read}]
+	{../fifo_fix/diff}
+
+And during initialization the mutex must be initialized
+(Listing \ref{lst:fifo_fix-init}).
+In contrast, when a global mutex is intialized this is often
+accomplished as part of \verb+DEFINE_MUTEX+.
+
+\lstinputlisting[float=htbp,
+				linerange=60-68,
+				firstnumber=60,
+				caption={Mutex initialization.},
+				label={lst:fifo_fix-init}]
+	{../fifo_fix/diff}
+
+\begin{samepage}
+An example session with the driver using these changes is shown below.
+
+\begin{verbatim}
+test$ cat /sys/devices/virtual/fifo/fifo0/read_offset
+0
+test$ cat /sys/devices/virtual/fifo/fifo0/write_offset
+0
+
+test$ # (terminal 1)
+test$ sudo ./fifow 10
+
+test$ # (terminal 2)
+test$ sudo ./fifow 20
+
+test$ # (terminal 1)
+test$ sudo ./fifow 11
+
+test$ # (terminal 2)
+test$ sudo ./fifow 21
+
+test$ # (terminal 1)
+test$ sudo ./fifor 2
+20
+21
+
+test$ # (terminal 2)
+test$ sudo ./fifor 2
+10
+
+test$ cat /sys/devices/virtual/fifo/fifo0/read_offset
+0
+test$ cat /sys/devices/virtual/fifo/fifo0/write_offset
+0
+\end{verbatim}
+
+It should be apparent that the driver no longer has any concurrency
+problems.
+Both terminals tried to write two values.
+Since the fifo size is three one should be lost.
+When each terminal tries to read two values it can be seen that only
+obtain three in total, which is correct.
+The order is difficult to predict but 21 coming after 20 is correct.
+And it is interesting that terminal 2 received value 10 which was
+written by terminal 1.
+And finally it can be seen that the offsets are correct after all
+values have been read out.
+
+\end{samepage}
 
 \pagebreak
 \printbibliography
