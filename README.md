@@ -15,7 +15,7 @@ in stages.  Each stage introduces a new concept.
 And the changes can between each stage can be concisely
 described by looking at the `diff`.
 
-Refer to the full documentation ([doc/main.pdf](https://github.com/jmahler/ldd/blob/master/doc/main.pdf?raw=true)) for more info.
+Refer to the full documentation ([doc/main.pdf](https://github.com/jmahler/ldd/blob/doc-build/doc/main.pdf?raw=true)) for more info.
 
 ## Author
 
