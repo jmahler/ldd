@@ -24,11 +24,11 @@ DEPS = hierarchy/hier.pdf
 
 # pdf, with links
 main.pdf: main.tex references.bib $(DEPS)
-	pdflatex $< 1>/dev/null
-	#bibtex main.aux 1>/dev/null
-	biber main 1>/dev/null
-	#makeindex main.idx 1>/dev/null
-	pdflatex $< 1>/dev/null
+	pdflatex $<
+	#bibtex main.aux
+	biber main
+	#makeindex main.idx
+	pdflatex $<
 
 clean:
 	-rm -f *.aux *.log *.blg *.bbl *.toc *.lof *.bcf
