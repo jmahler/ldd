@@ -125,8 +125,8 @@ $ apt-get install linux-source-3.9 linux-headers-3.9-1-amd64
 % {{{ hello
 \subsection{hello}
 
-The \verb+hello+ module (Listing \ref{lst:hello}) simply prints message
-when it is loaded and unload.
+The \verb+hello+ module (Listing \ref{lst:hello}) simply prints a message
+when it is loaded/unloaded.
 
 \begin{verbatim}
 hello$ make
@@ -147,7 +147,7 @@ the kernel which functions to call when this module is
 loaded (\verb+insmod+) and unloaded (\verb+rmmod+).
 
 The \verb+__init+ (line 4) and \verb+__exit+ (line 10)
-are optional hints for the compiler.  For example in the case of
+are optional hints for the compiler.  For example, in the case of
 \verb+__init+, this tells the kernel that it may discard the code
 after initialization has been completed.
 
@@ -157,11 +157,12 @@ Since these functions are not meant to be used outside the scope
 of this file, declaring them \verb+static+ enforces this
 constraint\autocite[Pg. 52]{corbet2009linux}.
 
-The \verb+printk+ statements are the \verb+printf+ of the
-kernel domain.  There are various levels, in this case
-\verb+KERN_ALERT+ is used which will cause the messages
-to appear on the console.  Notice that there is no comma
-between the level and the message.
+The \verb+printk+ statements are the equivalent of a \verb+printf+ but
+int the kernel domain.
+One difference is that there are various alert levels.
+In this case \verb+KERN_ALERT+ is used which will cause the messages
+to appear on the console.
+Notice that there is no comma between the level and the message.
 
 The \verb+MODULE_AUTHOR+ and \verb+MODULE_LICENSE+ on lines 15 and 16
 are optional but recommended\autocite[Pg. 51]{corbet2009linux}.
