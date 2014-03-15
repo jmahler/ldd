@@ -5,15 +5,15 @@ ldd - Linux device driver examples
 ## Description
 
 This project is a collection of Linux device driver examples.
-Most are unique to this project.  But they are derived from
+Most are unique to this project.  But many are derived from
 examples given in books and elsewhere.
 
-A device driver can appear to be complex, when taken as a whole,
-but it is from simple concepts.
-These drivers emphasize the simple concepts by building a driver
-in stages.  Each stage introduces a new concept.
-And the changes can between each stage can be concisely
-described by looking at the `diff`.
+A device driver can appear to be complex when taken as a whole.
+But they are built upon simple concepts.
+To emphasize this simplicity each driver is built in stages
+where each stage introduces a new concept.
+And the changes between stages can be easily viewed by looking
+at the `diff`.
 
 Refer to the full documentation ([doc/main.pdf](https://github.com/jmahler/ldd/blob/doc-build/doc/main.pdf?raw=true)) for more info.
 
