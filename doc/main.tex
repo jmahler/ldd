@@ -21,12 +21,11 @@
 		tabsize=4,
 		basicstyle=\ttfamily,
 		columns=fixed,
-		%basicstyle=\footnotesize,
 		showstringspaces=false,  % don't show the space character
 		%commentstyle=\textit,
 		showtabs=false,
 		extendedchars=true,
-		basicstyle=\normalsize,
+		basicstyle=\footnotesize,
 		captionpos=b,
 		frame=tb,
 		xleftmargin=0.3in}
@@ -75,27 +74,22 @@
 top downward to the more complex.}\label{fig:hier}
 \end{figure*}
 
-There are many excellent books about Linux device drivers
-\autocite{corbet2009linux}
-\autocite{venkateswaran2008essential}
-\autocite{love2010linux}
-\autocite{love2013linux}.
-However, in this authors experience, they were difficult to learn from.
-It certainly was not from their lack of detail.
-Clearly each of the authors have a profound understanding of the Linux
-kernel and their books reflect this.
-If anything it is due to this lack of simplicity.
+\nocite{corbet2009linux}
+\nocite{venkateswaran2008essential}
+\nocite{love2010linux}
+\nocite{love2013linux}
 
-The drivers described in this document aim to be simple and concise.
-Each one introduces as few concepts as possible.
-And each driver is a fully working example
-\footnote{Be creative with the examples.
-Try changing something and see what happens.
-Actively exploring in this way is a great way to solidify your understanding.}.
-Many of the drivers are built in stages.
-Each stage introduces a new concept.
-And the changes are concisely described showing the
-differences (\verb+diff+).
+This project is a collection of Linux device driver examples.
+Most are unique to this project.  But many are derived from
+examples given in books and elsewhere.
+
+A device driver can appear to be complex when taken as a whole.
+But they are built upon simple concepts.
+To emphasize this simplicity each driver is built in stages with
+each stage introducing a new concept.
+And the changes between stages can be easily viewed by looking
+at the \verb+`diff+.
+
 Figure \ref{fig:hier} shows the hierarchy of driver examples.
 
 These examples were built using Kernel version 3.9 and 3.10.
