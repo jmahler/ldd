@@ -92,7 +92,7 @@ at the \verb+`diff+.
 
 Figure \ref{fig:hier} shows the hierarchy of driver examples.
 
-These examples were built using Kernel version 3.9 and 3.10.
+These examples were built using Kernel version 3.9 through 3.13.
 They will likely work with other versions as well.
 The Linux kernel changes fast but it usually isn't difficult to
 determine what has changed and how it can be upgraded.
@@ -102,21 +102,20 @@ Each of the modules includes a Makefile to automate the build steps.
 \begin{verbatim}
 $ cd hello/
 $ make
-(should compile without error)
-(and produce hello.ko)
-$
+(should compile without error and produce hello.ko)
 \end{verbatim}
 
-It may be necessary to install the kernel sources before compiling.
-To do this under a Debian\autocite{debian} system the following steps
-can be used.
-
-\begin{verbatim}
+The kernel source and headers will need to be installed if they
+haven't been already.
+To accomplish this on one Debian\autocite{debian} system the following steps
+were used\footnote{It may be necessary to vary these commands
+for different kernel versions and different Debian releases.}.
+\\*
+\begin{Verbatim}[samepage=true]
 $ uname -r
-3.9-1-amd64
-$ apt-get install linux-source-3.9 linux-headers-3.9-1-amd64
-
-\end{verbatim}
+3.13-1-amd64
+$ sudo apt-get install linux-source linux-headers-amd64
+\end{Verbatim}
 
 % }}}
 
