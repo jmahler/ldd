@@ -1,7 +1,7 @@
 
 #
-# For an excellent description of how this Makefile works
-# refer to page 44 of Jonathan Corbet's book, Linux Device Drivers (2005).
+# For a description of how this Makefile works refer to
+# Chapter 2 of Jonathan Corbet's book, Linux Device Drivers (2005).
 #
 
 obj-m := hello.o
