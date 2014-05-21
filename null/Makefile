@@ -1,11 +1,17 @@
 
+ifneq ($(KERNELRELEASE),)
+
 obj-m := null.o
 
-path := $(shell uname -r)
+else
 
-all:
-	make -C /lib/modules/$(path)/build M=$(PWD) modules
+KDIR ?= /lib/modules/`uname -r`/build
+
+default:
+	$(MAKE) -C $(KDIR) M=$(PWD)
 
 clean:
-	make -C /lib/modules/$(path)/build M=$(PWD) clean
+	$(MAKE) -C $(KDIR) M=$(PWD) clean
+
+endif
 

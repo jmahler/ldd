@@ -1,14 +1,21 @@
 
+ifneq ($(KERNELRELEASE),)
+
 obj-m := data.o
 
-path := $(shell uname -r)
+else
 
-all:
-	make -C /lib/modules/$(path)/build M=$(PWD) modules
+KDIR ?= /lib/modules/`uname -r`/build
+
+default:
+	$(MAKE) -C $(KDIR) M=$(PWD)
 
 diff: data.c
 	diff -u ../data_rw/data.c data.c > diff; true
 
 clean:
-	make -C /lib/modules/$(path)/build M=$(PWD) clean
+	$(MAKE) -C $(KDIR) M=$(PWD) clean
 	-rm -f diff
+
+endif
+

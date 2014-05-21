@@ -1,14 +1,21 @@
 
+ifneq ($(KERNELRELEASE),)
+
 obj-m := fifo.o
 
-path := $(shell uname -r)
+else
 
-all:
-	make -C /lib/modules/$(path)/build M=$(PWD) modules
+KDIR ?= /lib/modules/`uname -r`/build
+
+default:
+	$(MAKE) -C $(KDIR) M=$(PWD)
 
 diff: fifo.c
 	diff -u ../fifo_rw/fifo.c fifo.c > diff; true
 
 clean:
-	make -C /lib/modules/$(path)/build M=$(PWD) clean
+	$(MAKE) -C $(KDIR) M=$(PWD) clean
 	-rm -f diff
+
+endif
+

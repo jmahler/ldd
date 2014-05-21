@@ -1,16 +1,17 @@
 
-#
-# For a description of how this Makefile works refer to
-# Chapter 2 of Jonathan Corbet's book, Linux Device Drivers (2005).
-#
+ifneq ($(KERNELRELEASE),)
 
 obj-m := hello.o
 
-path := $(shell uname -r)
+else
 
-all:
-	make -C /lib/modules/$(path)/build M=$(PWD) modules
+KDIR ?= /lib/modules/`uname -r`/build
+
+default:
+	$(MAKE) -C $(KDIR) M=$(PWD)
 
 clean:
-	make -C /lib/modules/$(path)/build M=$(PWD) clean
+	$(MAKE) -C $(KDIR) M=$(PWD) clean
+
+endif
 

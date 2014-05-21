@@ -1,12 +1,17 @@
+
+ifneq ($(KERNELRELEASE),)
+
 obj-m := hello.o
-KVERSION := $(shell uname -r)
 
-all:
-	$(MAKE) -C /lib/modules/$(KVERSION)/build M=$(PWD) modules
+else
 
-diff: hello.c
-	diff -u ../hello/hello.c hello.c > diff; true
+KDIR ?= /lib/modules/`uname -r`/build
+
+default:
+	$(MAKE) -C $(KDIR) M=$(PWD)
 
 clean:
-	$(MAKE) -C /lib/modules/$(KVERSION)/build M=$(PWD) clean
-	-rm -f diff
+	$(MAKE) -C $(KDIR) M=$(PWD) clean
+
+endif
+
