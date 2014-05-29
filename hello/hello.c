@@ -3,13 +3,13 @@
 
 static int __init hello_init(void)
 {
-	printk(KERN_DEBUG "Hello, World\n");
+	pr_debug("Hello, World\n");
 	return 0;
 }
 
 static void __exit hello_exit(void)
 {
-	printk(KERN_DEBUG "Goodbye, cruel world\n");
+	pr_debug("Goodbye, cruel world\n");
 }
 
 MODULE_AUTHOR("Jeremiah Mahler <jmmahler@gmail.com>");
