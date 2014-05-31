@@ -25,7 +25,7 @@ This module can also be added to the system so it can be loaded automatically.
 
 The first step is to place the module where it can be found.
 
-    $ cp hello.ko /lib/modules/3.15.0-rc7-00058-gf2159d1/kernel/drivers/char/
+    $ cp hello.ko /lib/modules/3.15.0-rc7-00058-gf2159d1/extra/
 
 Then run `depmod` to update modules.dep and modules.dep.bin.
 These files can be thought of as a database of the available drivers.
@@ -35,7 +35,7 @@ These files can be thought of as a database of the available drivers.
 To verify that it worked, run modinfo.
 
 	$ modinfo
-    filename:       /lib/modules/3.15.0-rc7-00058-gf2159d1/kernel/drivers/char/hello.ko
+    filename:       /lib/modules/3.15.0-rc7-00058-gf2159d1/extra/hello.ko
     license:        GPL
     author:         Jeremiah Mahler <jmmahler@gmail.com>
     depends:        
