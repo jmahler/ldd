@@ -2,6 +2,7 @@
 ifneq ($(KERNELRELEASE),)
 
 obj-m := hello.o
+ccflags-y += -DDEBUG
 
 else
 
