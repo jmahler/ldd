@@ -2,13 +2,13 @@
 NAME
 ----
 
-hello-usb - Hello world kernel module for a usb device
+hello-usb - Hello world kernel module for a usb keyboard
 
 DESCRIPTION
 -----------
 
-The `hello` module simply prints a message when one of its usb devices
-is plugged in or removed.
+The `hello` module simply prints a message when a usb keyboard is
+plugged in or disconnected.
 
     $ make
      (compiles to produce hello.ko)
@@ -42,7 +42,7 @@ Now `modprobe` can be used.
     # modprobe hello
 
 The third method supports all the previous methods as well making it
-possible for the kernel to autoload the module.  In this case the module
+possible for the kernel to auto load the module.  In this case the module
 is place in the tree and then the whole kernel is re-compiled.  The
 location `drivers/usb/misc` is a good place.
 
@@ -73,16 +73,16 @@ module any time a matching usb device is plugged in.
 MODULE PROBE
 ------------
 
-This module will print "Hello, World" when a usb device is connected and
+This module will print "Hello, World" when a usb keyboard is connected and
 the probe function is called.  However, if probe is called for another
 driver, and it asserts that it is the correct device, the probe function
 for the hello module will not be called.  To ensure that the hello probe
 function is called, other drivers may need to be blacklisted.
 
     # /etc/modprobe.d/hello-blacklist.conf
-    blacklist ftdi_sio
-    blacklist usbserial
-    blacklist serio_raw
+    blacklist hid_generic
+    blacklist usbhid
+    blacklist hid
 
 AUTHOR
 ------
