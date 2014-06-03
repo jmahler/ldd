@@ -7,22 +7,17 @@ hello-usb - Hello world kernel module for a usb device
 DESCRIPTION
 -----------
 
-The `hello` module simply prints a message when it is loaded or the usb
-device is inserted.
+The `hello` module simply prints a message when one of its usb devices
+is plugged in or removed.
 
     $ make
      (compiles to produce hello.ko)
     # insmod hello.ko
-     "Hello, World" in log
     (plug in usb device)
-     another "Hello, World" in log
+     "Hello, World" in log
     (disconnect usb device)
-     another "Goodbye" in log
+     another "Goodbye, cruel world" in log
     # rmmod hello
-     "Goodbye, cruel world" in log
-
-Whether it responds is determined by the product id vendor id given in the
-source code.
 
 MODULE LOADING
 --------------

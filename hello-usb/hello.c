@@ -32,27 +32,7 @@ static struct usb_driver hello_driver = {
 	.disconnect	= hello_disconnect,
 };
 
-static int __init hello_init(void)
-{
-	int result;
-
-	pr_debug("init: Hello, World\n");
-
-	result = usb_register(&hello_driver);
-	if (result)
-		pr_err("usb_register failed. Error number %d", result);
-
-	return result;
-}
-
-static void __exit hello_exit(void)
-{
-	pr_debug("exit: Goodbye, cruel world\n");
-	usb_deregister(&hello_driver);
-}
-
-module_init(hello_init);
-module_exit(hello_exit);
+module_usb_driver(hello_driver);
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Jeremiah Mahler <jmmahler@gmail.com>");
