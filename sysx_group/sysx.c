@@ -20,7 +20,12 @@ static ssize_t x_show(struct kobject *kobj, struct kobj_attribute *attr,
 static ssize_t x_store(struct kobject *kobj, struct kobj_attribute *attr,
 						const char *buf, size_t count)
 {
-	sscanf(buf, "%du", &x);
+	int ret;
+
+	ret = sscanf(buf, "%du", &x);
+	if (ret != 1)
+		return -EINVAL;
+
 	return count;
 }
 
@@ -37,7 +42,12 @@ static ssize_t y_show(struct kobject *kobj, struct kobj_attribute *attr,
 static ssize_t y_store(struct kobject *kobj, struct kobj_attribute *attr,
 						const char *buf, size_t count)
 {
-	sscanf(buf, "%du", &y);
+	int ret;
+
+	ret = sscanf(buf, "%du", &y);
+	if (ret != 1)
+		return -EINVAL;
+
 	return count;
 }
 
@@ -48,7 +58,7 @@ static struct kobj_attribute y_attribute =
 static struct attribute *attrs[] = {
 	&x_attribute.attr,
 	&y_attribute.attr,
-	NULL,  // terminate list
+	NULL,  /* terminate list */
 };
 
 static struct attribute_group attr_group = {
