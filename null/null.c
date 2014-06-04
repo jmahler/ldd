@@ -16,7 +16,7 @@ struct null_dev {
 } *null_devp;
 
 
-static int null_open(struct inode* inode, struct file* filp)
+static int null_open(struct inode *inode, struct file *filp)
 {
 	struct null_dev *null_devp;
 
@@ -28,13 +28,13 @@ static int null_open(struct inode* inode, struct file* filp)
 }
 
 static ssize_t null_read(struct file *filp, char __user *buf,
-								size_t count, loff_t *f_pos)
+					size_t count, loff_t *f_pos)
 {
 	return 0;
 }
 
 static ssize_t null_write(struct file *filp, const char __user *buf,
-								size_t count, loff_t *f_pos)
+					size_t count, loff_t *f_pos)
 {
 	return count;
 }
@@ -80,7 +80,7 @@ static int __init null_init(void)
 	}
 
 	null_device = device_create(null_class, NULL,
-							MKDEV(MAJOR(null_major), 0), NULL, "null%d",0);
+				MKDEV(MAJOR(null_major), 0), NULL, "null%d", 0);
 	if (IS_ERR(null_device)) {
 		pr_warn("device_create failed\n");
 		err = PTR_ERR(null_device);
