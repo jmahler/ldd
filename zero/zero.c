@@ -1,3 +1,4 @@
+
 #include <linux/cdev.h>
 #include <linux/device.h>
 #include <linux/fs.h>
@@ -15,8 +16,7 @@ struct zero_dev {
 	struct cdev cdev;
 } *zero_devp;
 
-
-static int zero_open(struct inode* inode, struct file* filp)
+static int zero_open(struct inode *inode, struct file *filp)
 {
 	struct zero_dev *zero_devp;
 
@@ -28,17 +28,16 @@ static int zero_open(struct inode* inode, struct file* filp)
 }
 
 static ssize_t zero_read(struct file *filp, char __user *buf,
-								size_t count, loff_t *f_pos)
+					size_t count, loff_t *f_pos)
 {
-	if (clear_user((void __user *) buf, count) > 0) {
+	if (clear_user((void __user *) buf, count) > 0)
 		return -EFAULT;
-	}
 
 	return count;
 }
 
 ssize_t zero_write(struct file *filp, const char __user *buf,
-								size_t count, loff_t *f_pos)
+					size_t count, loff_t *f_pos)
 {
 	return count;
 }
@@ -48,7 +47,7 @@ static int zero_release(struct inode *inode, struct file *filp)
 	return 0;
 }
 
-const struct file_operations zero_fops = {
+static const struct file_operations zero_fops = {
 	.owner = THIS_MODULE,
 	.open = zero_open,
 	.read = zero_read,
@@ -84,7 +83,7 @@ static int __init zero_init(void)
 	}
 
 	zero_device = device_create(zero_class, NULL,
-							MKDEV(MAJOR(zero_major), 0), NULL, "zero%d",0);
+				MKDEV(MAJOR(zero_major), 0), NULL, "zero%d", 0);
 	if (IS_ERR(zero_device)) {
 		pr_warn("device_create failed\n");
 		err = PTR_ERR(zero_device);
@@ -118,8 +117,9 @@ static void __exit zero_exit(void)
 	unregister_chrdev_region(zero_major, 1);
 }
 
+module_init(zero_init);
+module_exit(zero_exit);
+
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Jeremiah Mahler <jmmahler@gmail.com>");
 
-module_init(zero_init);
-module_exit(zero_exit);
