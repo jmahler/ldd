@@ -1,3 +1,4 @@
+
 #include <linux/cdev.h>
 #include <linux/device.h>
 #include <linux/fs.h>
@@ -15,10 +16,10 @@ struct device *data_device;
 struct data_dev {
 	struct cdev cdev;
 	char data[MAX_DATA];
-	loff_t cur_ofs;  // current offset
+	loff_t cur_ofs;  /* current offset */
 } *data_devp;
 
-static int data_open(struct inode* inode, struct file* filp)
+static int data_open(struct inode *inode, struct file *filp)
 {
 	struct data_dev *data_devp;
 
@@ -31,8 +32,7 @@ static int data_open(struct inode* inode, struct file* filp)
 }
 
 static ssize_t data_read(struct file *filp, char __user *buf,
-							size_t count,
-							loff_t *f_pos)
+				size_t count, loff_t *f_pos)
 {
 	struct data_dev *data_devp = filp->private_data;
 	loff_t cur_ofs;
@@ -45,9 +45,8 @@ static ssize_t data_read(struct file *filp, char __user *buf,
 
 	count = (count > left) ? left : count;
 
-	if (copy_to_user(buf, (void *) (datp + cur_ofs), count) != 0) {
+	if (copy_to_user(buf, (void *) (datp + cur_ofs), count) != 0)
 		return -EIO;
-	}
 
 	data_devp->cur_ofs = cur_ofs + count;
 
@@ -55,8 +54,7 @@ static ssize_t data_read(struct file *filp, char __user *buf,
 }
 
 static ssize_t data_write(struct file *filp, const char __user *buf,
-							size_t count,
-							loff_t *f_pos)
+						size_t count, loff_t *f_pos)
 {
 	struct data_dev *data_devp = filp->private_data;
 	loff_t cur_ofs;
@@ -69,9 +67,8 @@ static ssize_t data_write(struct file *filp, const char __user *buf,
 
 	count = (count > left) ? left : count;
 
-	if (copy_from_user((void *) (datp + cur_ofs), buf, count) != 0) {
+	if (copy_from_user((void *) (datp + cur_ofs), buf, count) != 0)
 		return -EIO;
-	}
 
 	data_devp->cur_ofs = cur_ofs + count;
 
@@ -83,7 +80,7 @@ static int data_release(struct inode *inode, struct file *filp)
 	return 0;
 }
 
-struct file_operations data_fops = {
+const struct file_operations data_fops = {
 	.owner = THIS_MODULE,
 	.open = data_open,
 	.read = data_read,
@@ -97,7 +94,7 @@ static int __init data_init(void)
 
 	err = alloc_chrdev_region(&data_major, 0, 1, DEVICE_NAME);
 	if (err < 0) {
-		printk(KERN_WARNING "Unable to register device\n");
+		pr_warn("Unable to register device\n");
 		goto err_chrdev_region;
 	}
 
@@ -105,7 +102,7 @@ static int __init data_init(void)
 
 	data_devp = kmalloc(sizeof(struct data_dev), GFP_KERNEL);
 	if (!data_devp) {
-		printk(KERN_WARNING "Unable to kmalloc data_devp\n");
+		pr_warn("Unable to kmalloc data_devp\n");
 		err = -ENOMEM;
 		goto err_malloc_devp;
 	}
@@ -114,14 +111,14 @@ static int __init data_init(void)
 	data_devp->cdev.owner = THIS_MODULE;
 	err = cdev_add(&data_devp->cdev, data_major, 1);
 	if (err) {
-		printk(KERN_WARNING "cdev_add failed\n");
+		pr_warn("cdev_add failed\n");
 		goto err_cdev_add;
 	}
 
 	data_device = device_create(data_class, NULL,
-							MKDEV(MAJOR(data_major), 0), NULL, "data%d",0);
+			MKDEV(MAJOR(data_major), 0), NULL, "data%d", 0);
 	if (IS_ERR(data_device)) {
-		printk(KERN_WARNING "device_create failed\n");
+		pr_warn("device_create failed\n");
 		err = PTR_ERR(data_device);
 		goto err_device_create;
 	}
@@ -153,8 +150,9 @@ static void __exit data_exit(void)
 	unregister_chrdev_region(data_major, 1);
 }
 
-MODULE_AUTHOR("Jeremiah Mahler <jmmahler@gmail.com>");
-MODULE_LICENSE("GPL");
-
 module_init(data_init);
 module_exit(data_exit);
+
+MODULE_LICENSE("GPL");
+MODULE_AUTHOR("Jeremiah Mahler <jmmahler@gmail.com>");
+
