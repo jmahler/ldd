@@ -41,7 +41,7 @@ static ssize_t misc_write(struct file *filp, const char __user *buf,
 		return -EINVAL;
 
 	if (copy_from_user(kbuf, buf, strlen_misc_id) != 0)
-		return -EINVAL;
+		return -EIO;
 
 	if (0 != strncmp(misc_id, kbuf, strlen_misc_id))
 		return -EINVAL;
