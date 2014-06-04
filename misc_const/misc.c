@@ -12,7 +12,7 @@ const char misc_id[] = "aeda58c25c67";
 #define strlen_misc_id (sizeof(misc_id) - 1)  /* w/o '\0' */
 
 static ssize_t misc_read(struct file *filp, char __user *buf,
-							size_t count, loff_t *f_pos)
+				size_t count, loff_t *f_pos)
 {
 	size_t left;
 
@@ -24,9 +24,8 @@ static ssize_t misc_read(struct file *filp, char __user *buf,
 	if (count > left)
 		count = left;
 
-	if (copy_to_user(buf, misc_id + *f_pos, count) != 0) {
+	if (copy_to_user(buf, misc_id + *f_pos, count) != 0)
 		return -EIO;
-	}
 
 	*f_pos += count;
 
@@ -34,26 +33,23 @@ static ssize_t misc_read(struct file *filp, char __user *buf,
 }
 
 static ssize_t misc_write(struct file *filp, const char __user *buf,
-							size_t count, loff_t *f_pos)
+				size_t count, loff_t *f_pos)
 {
 	char kbuf[strlen_misc_id];
 
-	if (count != strlen_misc_id) {
+	if (count != strlen_misc_id)
 		return -EINVAL;
-	}
 
-	if (copy_from_user(kbuf, buf, strlen_misc_id) != 0) {
+	if (copy_from_user(kbuf, buf, strlen_misc_id) != 0)
 		return -EINVAL;
-	}
 
-	if (0 != strncmp(misc_id, kbuf, strlen_misc_id)) {
+	if (0 != strncmp(misc_id, kbuf, strlen_misc_id))
 		return -EINVAL;
-	}
 
 	return count;
 }
 
-struct file_operations misc_fops = {
+const struct file_operations misc_fops = {
 	.owner = THIS_MODULE,
 	.read = misc_read,
 	.write = misc_write,
