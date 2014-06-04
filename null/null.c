@@ -44,7 +44,7 @@ static int null_release(struct inode *inode, struct file *filp)
 	return 0;
 }
 
-struct file_operations null_fops = {
+const struct file_operations null_fops = {
 	.owner = THIS_MODULE,
 	.open = null_open,
 	.read = null_read,

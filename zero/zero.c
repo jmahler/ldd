@@ -48,7 +48,7 @@ static int zero_release(struct inode *inode, struct file *filp)
 	return 0;
 }
 
-struct file_operations zero_fops = {
+const struct file_operations zero_fops = {
 	.owner = THIS_MODULE,
 	.open = zero_open,
 	.read = zero_read,
