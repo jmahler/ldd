@@ -137,7 +137,7 @@ static int fifo_release(struct inode *inode, struct file *filp)
 	return 0;
 }
 
-const struct file_operations fifo_fops = {
+static const struct file_operations fifo_fops = {
 	.owner = THIS_MODULE,
 	.open = fifo_open,
 	.read = fifo_read,

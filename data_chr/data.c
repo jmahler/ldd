@@ -16,7 +16,7 @@ struct data_dev {
 	struct cdev cdev;
 } *data_devp;
 
-const struct file_operations data_fops = {
+static const struct file_operations data_fops = {
 	.owner = THIS_MODULE,
 };
 

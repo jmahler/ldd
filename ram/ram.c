@@ -102,7 +102,7 @@ int ram_release(struct inode *inode, struct file *filp)
 	return 0;
 }
 
-const struct file_operations ram_fops = {
+static const struct file_operations ram_fops = {
 	.owner = THIS_MODULE,
 	.open = ram_open,
 	.read = ram_read,

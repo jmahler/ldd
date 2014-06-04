@@ -49,7 +49,7 @@ static ssize_t misc_write(struct file *filp, const char __user *buf,
 	return count;
 }
 
-const struct file_operations misc_fops = {
+static const struct file_operations misc_fops = {
 	.owner = THIS_MODULE,
 	.read = misc_read,
 	.write = misc_write,
