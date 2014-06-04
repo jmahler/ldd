@@ -14,21 +14,24 @@ static int y;
 static ssize_t sysx_xy_show(struct kobject *kobj, struct attribute *attr,
 						char *buf)
 {
-	if (0 == strcmp(attr->name, "x")) {
+	if (0 == strcmp(attr->name, "x"))
 		return sprintf(buf, "%d\n", x);
-	} else {
+	else
 		return sprintf(buf, "%d\n", y);
-	}
 }
 
 static ssize_t sysx_xy_store(struct kobject *kobj, struct attribute *attr,
 						const char *buf, size_t count)
 {
-	if (0 == strcmp(attr->name, "x")) {
-		sscanf(buf, "%du", &x);
-	} else {
-		sscanf(buf, "%du", &y);
-	}
+	int ret;
+
+	if (0 == strcmp(attr->name, "x"))
+		ret = sscanf(buf, "%du", &x);
+	else
+		ret = sscanf(buf, "%du", &y);
+
+	if (ret != 1)
+		return -EINVAL;
 
 	return count;
 }
@@ -37,7 +40,7 @@ void sysx_xy_release(struct kobject *kobj)
 {
 }
 
-static struct sysfs_ops sysx_sysfs_ops = {
+static const struct sysfs_ops sysx_sysfs_ops = {
 	.show = sysx_xy_show,
 	.store = sysx_xy_store,
 };
@@ -60,7 +63,7 @@ struct attribute y_attr = {
 static struct attribute *attrs[] = {
 	&x_attr,
 	&y_attr,
-	NULL,  // terminate list
+	NULL,  /* terminate list */
 };
 
 static struct attribute_group attr_group = {
@@ -79,7 +82,8 @@ static int __init sysx_init(void)
 
 	kobj->ktype = &sysx_ktype;
 
-	ret = kobject_init_and_add(kobj, &sysx_ktype, kernel_kobj, "%s", "sysx");
+	ret = kobject_init_and_add(kobj, &sysx_ktype, kernel_kobj,
+						"%s", "sysx");
 	if (ret)
 		kobject_put(kobj);
 
@@ -100,3 +104,4 @@ module_exit(sysx_exit);
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Jeremiah Mahler <jmmahler@gmail.com>");
+
