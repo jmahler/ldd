@@ -1,3 +1,4 @@
+
 #include <linux/cdev.h>
 #include <linux/device.h>
 #include <linux/fs.h>
@@ -15,10 +16,10 @@ struct device *data_device;
 struct data_dev {
 	struct cdev cdev;
 	char data[MAX_DATA];
-	loff_t cur_ofs;  // current offset
+	loff_t cur_ofs;  /* current offset */
 } *data_devp;
 
-static int data_open(struct inode* inode, struct file* filp)
+static int data_open(struct inode *inode, struct file *filp)
 {
 	struct data_dev *data_devp;
 
@@ -31,8 +32,7 @@ static int data_open(struct inode* inode, struct file* filp)
 }
 
 static ssize_t data_read(struct file *filp, char __user *buf,
-							size_t count,
-							loff_t *f_pos)
+						size_t count, loff_t *f_pos)
 {
 	struct data_dev *data_devp = filp->private_data;
 	loff_t cur_ofs;
@@ -45,9 +45,8 @@ static ssize_t data_read(struct file *filp, char __user *buf,
 
 	count = (count > left) ? left : count;
 
-	if (copy_to_user(buf, (void *) (datp + cur_ofs), count) != 0) {
+	if (copy_to_user(buf, (void *) (datp + cur_ofs), count) != 0)
 		return -EIO;
-	}
 
 	data_devp->cur_ofs = cur_ofs + count;
 
@@ -55,8 +54,7 @@ static ssize_t data_read(struct file *filp, char __user *buf,
 }
 
 static ssize_t data_write(struct file *filp, const char __user *buf,
-							size_t count,
-							loff_t *f_pos)
+						size_t count, loff_t *f_pos)
 {
 	struct data_dev *data_devp = filp->private_data;
 	loff_t cur_ofs;
@@ -69,9 +67,8 @@ static ssize_t data_write(struct file *filp, const char __user *buf,
 
 	count = (count > left) ? left : count;
 
-	if (copy_from_user((void *) (datp + cur_ofs), buf, count) != 0) {
+	if (copy_from_user((void *) (datp + cur_ofs), buf, count) != 0)
 		return -EIO;
-	}
 
 	data_devp->cur_ofs = cur_ofs + count;
 
@@ -86,17 +83,17 @@ static loff_t data_llseek(struct file *filp, loff_t offset, int orig)
 	cur_ofs = data_devp->cur_ofs;
 
 	switch (orig) {
-		case SEEK_SET:
-			cur_ofs = offset;
-			break;
-		case SEEK_CUR:
-			cur_ofs += offset;
-			break;
-		case SEEK_END:
-			cur_ofs = MAX_DATA + offset;
-			break;
-		default:
-			return -EINVAL;
+	case SEEK_SET:
+		cur_ofs = offset;
+		break;
+	case SEEK_CUR:
+		cur_ofs += offset;
+		break;
+	case SEEK_END:
+		cur_ofs = MAX_DATA + offset;
+		break;
+	default:
+		return -EINVAL;
 	}
 
 	if (cur_ofs < 0 || cur_ofs >= MAX_DATA)
@@ -112,7 +109,7 @@ static int data_release(struct inode *inode, struct file *filp)
 	return 0;
 }
 
-struct file_operations data_fops = {
+const struct file_operations data_fops = {
 	.owner = THIS_MODULE,
 	.open = data_open,
 	.read = data_read,
@@ -149,7 +146,7 @@ static int __init data_init(void)
 	}
 
 	data_device = device_create(data_class, NULL,
-							MKDEV(MAJOR(data_major), 0), NULL, "data%d",0);
+				MKDEV(MAJOR(data_major), 0), NULL, "data%d", 0);
 	if (IS_ERR(data_device)) {
 		pr_warn("device_create failed\n");
 		err = PTR_ERR(data_device);
@@ -183,8 +180,9 @@ static void __exit data_exit(void)
 	unregister_chrdev_region(data_major, 1);
 }
 
-MODULE_AUTHOR("Jeremiah Mahler <jmmahler@gmail.com>");
-MODULE_LICENSE("GPL");
-
 module_init(data_init);
 module_exit(data_exit);
+
+MODULE_LICENSE("GPL");
+MODULE_AUTHOR("Jeremiah Mahler <jmmahler@gmail.com>");
+
