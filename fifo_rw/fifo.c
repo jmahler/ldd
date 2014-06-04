@@ -119,7 +119,7 @@ static int __init fifo_init(void)
 
 	err = alloc_chrdev_region(&fifo_major, 0, 1, DEVICE_NAME);
 	if (err < 0) {
-		printk(KERN_WARNING "Unable to register device\n");
+		pr_warn("Unable to register device\n");
 		goto err_chrdev_region;
 	}
 
@@ -127,7 +127,7 @@ static int __init fifo_init(void)
 
 	fifo_devp = kmalloc(sizeof(struct fifo_dev), GFP_KERNEL);
 	if (!fifo_devp) {
-		printk(KERN_WARNING "Unable to kmalloc fifo_devp\n");
+		pr_warn("Unable to kmalloc fifo_devp\n");
 		err = -ENOMEM;
 		goto err_malloc_devp;
 	}
@@ -143,14 +143,14 @@ static int __init fifo_init(void)
 
 	err = cdev_add(&fifo_devp->cdev, fifo_major, 1);
 	if (err) {
-		printk(KERN_WARNING "cdev_add failed\n");
+		pr_warn("cdev_add failed\n");
 		goto err_cdev_add;
 	}
 
 	fifo_device = device_create(fifo_class, NULL,
 							MKDEV(MAJOR(fifo_major), 0), NULL, "fifo%d",0);
 	if (IS_ERR(fifo_device)) {
-		printk(KERN_WARNING "device_create failed\n");
+		pr_warn("device_create failed\n");
 		err = PTR_ERR(fifo_device);
 		goto err_device_create;
 	}

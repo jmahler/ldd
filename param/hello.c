@@ -10,7 +10,7 @@ static int __init hello_init(void)
 	int i;
 
 	for (i = 0; i < howmany; i++) {
-		printk(KERN_ALERT "Hello, World\n");
+		pr_alert("Hello, World\n");
 	}
 
 	return 0;
@@ -21,7 +21,7 @@ static void __exit hello_exit(void)
 	int i;
 
 	for (i = 0; i < howmany; i++) {
-		printk(KERN_ALERT "Goodbye, cruel world\n");
+		pr_alert("Goodbye, cruel world\n");
 	}
 }
 
