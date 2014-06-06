@@ -1,8 +1,8 @@
 
 ifneq ($(KERNELRELEASE),)
 
-obj-m := hello.o
 ccflags-y += -DDEBUG
+obj-m := hello.o
 
 else
 
