@@ -4,18 +4,50 @@ ldd - Linux device driver examples
 
 ## Description
 
-This project is a collection of Linux device driver examples.
-Most are unique to this project.  But many are derived from
-examples given in books and elsewhere.
+This is a collection of Linux device driver examples that were collected
+while learning how to write drivers.  Some are unique to this project
+and some have been derived from examples given in books [[1]].
 
-A device driver can appear to be complex when taken as a whole.
-But they are built upon simple concepts.
-To emphasize this simplicity each driver is built in stages
-where each stage introduces a new concept.
-And the changes between stages can be easily viewed by looking
-at the `diff`.
+In some examples, such as data_ and fifo_, the driver is built up in
+stages with each stage only adding a single new feature.  The `diff`
+program can then be used to see what has changed compared to the
+previous version.
 
-Refer to the full documentation ([Documentation/main.pdf](https://github.com/jmahler/ldd/blob/doc-build/Documentation/main.pdf?raw=true)) for more info.
+## Index
+
+  - hello - "Hello, World!" message when driver loaded (insmod).
+
+  - hello-usb - "Hello, World!" message when usb keyboard plugged in.
+
+  - data_ - A data (ram) driver.
+
+	- data_chr - Basic character driver infrastructure.
+
+	- data_rw - Addition of read/write operations.
+
+	- data_sk - Addition of seek operation.
+
+	- data_ioctl - Addition of ioctl() support.
+
+  - zero - /dev/zero driver.
+
+  - null - /dev/null driver.
+
+  - fifo_ - A first in first out (FIFO) driver.
+
+	- fifo_rw - Read/write FIFO operations.
+
+	- fifo_xxx - Shows how race conditions break the current
+	  implementation.
+
+	- fifo_fix - Fix the race conditions using mutexes.
+
+	- fifo_sysfs - Add Sysfs support so state of FIFOs can be read.
+
+## References
+
+  [1] [Linux Device Drivers][1]
+  [1]: http://lwn.net/Kernel/LDD3/
 
 ## Author
 
