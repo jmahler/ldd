@@ -69,8 +69,6 @@ static int __init misc_init(void)
 static void __exit misc_exit(void)
 {
 	misc_deregister(&misc_dev);
-
-	return;
 }
 
 module_init(misc_init);
