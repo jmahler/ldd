@@ -14,22 +14,9 @@ const char misc_id[] = "aeda58c25c67";
 static ssize_t misc_read(struct file *filp, char __user *buf,
 				size_t count, loff_t *f_pos)
 {
-	size_t left;
+	int mcount = min(strlen_misc_id, count);
 
-	if (*f_pos >= strlen_misc_id)
-		return 0;  /* EOF */
-
-	left = strlen_misc_id - *f_pos;
-
-	if (count > left)
-		count = left;
-
-	if (copy_to_user(buf, misc_id + *f_pos, count) != 0)
-		return -EIO;
-
-	*f_pos += count;
-
-	return count;
+	return copy_to_user(buf, misc_id, mcount) ? -EIO : mcount;
 }
 
 static ssize_t misc_write(struct file *filp, const char __user *buf,
@@ -40,10 +27,10 @@ static ssize_t misc_write(struct file *filp, const char __user *buf,
 	if (count != strlen_misc_id)
 		return -EINVAL;
 
-	if (copy_from_user(kbuf, buf, strlen_misc_id) != 0)
+	if (copy_from_user(kbuf, buf, count) != 0)
 		return -EIO;
 
-	if (0 != strncmp(misc_id, kbuf, strlen_misc_id))
+	if (strncmp(misc_id, buf, count))
 		return -EINVAL;
 
 	return count;

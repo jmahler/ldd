@@ -2,17 +2,15 @@
 
 set -v
 
-id=`cat /dev/misc`
-echo "$id"
+# read the id
+dd if=/dev/misc of=id.txt bs=50 count=1
+cat id.txt && echo ""
 
-echo -n $id > /dev/misc
+# write the id, valid
+dd if=id.txt of=/dev/misc bs=50 count=1
 echo $?
 
-echo -n "WRONG" > /dev/misc
+# write part of the id, invalid
+dd if=id.txt of=/dev/misc bs=2 count=1
 echo $?
 
-dd if=/dev/misc of=out.txt bs=1 count=20
-cat out.txt; echo ""
-
-dd if=/dev/misc of=out.txt bs=2 count=10
-cat out.txt; echo ""
