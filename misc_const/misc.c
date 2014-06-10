@@ -55,14 +55,14 @@ static const struct file_operations misc_fops = {
 	.write = misc_write,
 };
 
-static struct miscdevice misc_dev;
+static struct miscdevice misc_dev = {
+	.name = DEVICE_NAME,
+	.minor = MISC_DYNAMIC_MINOR,
+	.fops = &misc_fops,
+};
 
 static int __init misc_init(void)
 {
-	misc_dev.name = DEVICE_NAME;
-	misc_dev.minor = MISC_DYNAMIC_MINOR;
-	misc_dev.fops = &misc_fops;
-
 	return misc_register(&misc_dev);
 }
 
