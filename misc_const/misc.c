@@ -20,20 +20,13 @@ static ssize_t misc_read(struct file *filp, char __user *buf,
 static ssize_t misc_write(struct file *filp, const char __user *buf,
 				size_t count, loff_t *f_pos)
 {
-	char c;
-	unsigned int i;
+	char kbuf[ARRAY_SIZE(misc_id) - 1];
 
 	if (count != ARRAY_SIZE(misc_id) - 1)
 		return -EINVAL;
 
-	for (i = 0; i < count; i++) {
-		if (get_user(c, buf + i))
-			return -EIO;
-		if (misc_id[i] != c)
-			return -EINVAL;
-	}
-
-	return count;  /* success */
+	return simple_write_to_buffer(kbuf, ARRAY_SIZE(kbuf), f_pos, buf,
+					count);
 }
 
 static const struct file_operations misc_fops = {
