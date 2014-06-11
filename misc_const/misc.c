@@ -14,9 +14,8 @@ const char misc_id[] = "aeda58c25c67";
 static ssize_t misc_read(struct file *filp, char __user *buf,
 				size_t count, loff_t *f_pos)
 {
-	int mcount = min(strlen_misc_id, count);
-
-	return copy_to_user(buf, misc_id, mcount) ? -EIO : mcount;
+	return simple_read_from_buffer(buf, count, f_pos, misc_id,
+			strlen_misc_id);
 }
 
 static ssize_t misc_write(struct file *filp, const char __user *buf,
