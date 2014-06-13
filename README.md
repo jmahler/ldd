@@ -19,7 +19,10 @@ previous version.
 
   - hello-usb - "Hello, World!" message when usb keyboard plugged in.
 
-  - hello-debugfs - read/write message using debugfs files.
+  - hello-debugfs - read/write an id using debugfs files.
+
+  - misc_const - read/write an id using a misc driver (simplified char
+    driver).
 
   - data_ - A data (ram) driver.
 
