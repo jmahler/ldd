@@ -33,7 +33,7 @@ static ssize_t hello_id_write(struct file *filp, const char __user *buf,
 	if (!simple_write_to_buffer(kbuf, ARRAY_SIZE(kbuf), f_pos, buf, count))
 		return -EINVAL;
 
-	if (!strncmp(hello_id, kbuf, ARRAY_SIZE(hello_id) - 1))
+	if (strncmp(hello_id, kbuf, ARRAY_SIZE(hello_id) - 1))
 		return -EINVAL;
 
 	return count;  /* success */
