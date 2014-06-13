@@ -11,6 +11,7 @@ const char hello_id[] = "aeda58c25c67";
 struct hello_dev {
 	struct dentry *root;
 	struct dentry *id;
+	struct dentry *d_jiffies;
 } *hello_devp;
 
 
@@ -58,6 +59,12 @@ static int __init hello_init(void)
 					hello_devp->root, hello_devp,
 					&hello_id_fops);
 	if (!hello_devp->id)
+		goto err_debugfs_files;
+
+	hello_devp->d_jiffies = debugfs_create_u64("jiffies", 0444,
+					hello_devp->root,
+					(u64 *) &jiffies);
+	if (!hello_devp->d_jiffies)
 		goto err_debugfs_files;
 
 	return 0;
