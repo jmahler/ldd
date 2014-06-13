@@ -19,6 +19,8 @@ previous version.
 
   - hello-usb - "Hello, World!" message when usb keyboard plugged in.
 
+  - hello-debugfs - read/write message using debugfs files.
+
   - data_ - A data (ram) driver.
 
 	- data_chr - Basic character driver infrastructure.
