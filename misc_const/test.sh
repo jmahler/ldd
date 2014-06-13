@@ -2,22 +2,16 @@
 
 set -v
 
-# read the id, large block
-dd if=/dev/misc of=id.txt bs=50 count=1
-cat id.txt && echo ""
+ID=/dev/misc
 
-# read the id, small block
-dd if=/dev/misc of=id2.txt bs=1 count=50
-cat id.txt && echo ""
+cat $ID >id.txt
 
-# should have no differences
-diff id.txt id2.txt
+cp id.txt id-bad.txt
+sed -i 's/a/X/g' id-bad.txt
 
-# write a valid id
-dd if=id.txt of=/dev/misc bs=50 count=1
+cat id.txt > $ID
 echo $?
 
-# write an invalid id
-dd if=id.txt of=/dev/misc bs=2 count=1
+cat id-bad.txt > $ID
 echo $?
 
