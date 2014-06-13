@@ -25,8 +25,13 @@ static ssize_t misc_write(struct file *filp, const char __user *buf,
 	if (count != ARRAY_SIZE(misc_id) - 1)
 		return -EINVAL;
 
-	return simple_write_to_buffer(kbuf, ARRAY_SIZE(kbuf), f_pos, buf,
-					count);
+	if (!simple_write_to_buffer(kbuf, ARRAY_SIZE(kbuf), f_pos, buf, count))
+		return -EINVAL;
+
+	if (!strncmp(misc_id, kbuf, ARRAY_SIZE(misc_id) - 1))
+		return -EINVAL;
+
+	return count;  /* success */
 }
 
 static const struct file_operations misc_fops = {
