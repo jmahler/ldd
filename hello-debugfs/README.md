@@ -7,8 +7,29 @@ hello-debugfs - Hello world for debugfs.
 DESCRIPTION
 -----------
 
-This "Hello, World!" driver shows how to create files and directories
-using debugfs to read and write data inside a module.
+Shows how to create files and directories using debugfs.  An id can be
+read from the file.  If the id written back to the file it will return
+success, otherwise it will return failure.
+
+    #!/bin/sh
+    
+    set -v
+    
+    ID="/sys/kernel/debug/hello/id"
+    
+    cat $ID >id.txt
+    
+    cp id.txt id-bad.txt
+    sed -i 's/a/X/g' id-bad.txt
+    
+    cat id.txt >$ID
+    echo $?
+    1  # failure
+
+    
+    cat id-bad.txt >$ID
+    echo $?
+    0  # OK
 
 AUTHOR
 ------
