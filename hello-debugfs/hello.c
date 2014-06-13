@@ -45,18 +45,33 @@ static const struct file_operations hello_id_fops = {
 	.write = hello_id_write,
 };
 
+DEFINE_MUTEX(foo_lock);
+
 static ssize_t hello_foo_read(struct file *filp, char __user *buf,
 				size_t count, loff_t *f_pos)
 {
-	return simple_read_from_buffer(buf, count, f_pos, hello_devp->foo,
+	int ret;
+
+	if (mutex_lock_interruptible(&foo_lock))
+		return -EINTR;
+	ret = simple_read_from_buffer(buf, count, f_pos, hello_devp->foo,
 			PAGE_SIZE);
+	mutex_unlock(&foo_lock);
+
+	return ret;
 }
 
 static ssize_t hello_foo_write(struct file *filp, const char __user *buf,
 				size_t count, loff_t *f_pos)
 {
-	if (!simple_write_to_buffer(hello_devp->foo, PAGE_SIZE,
-					f_pos, buf, count))
+	int ret;
+
+	if (mutex_lock_interruptible(&foo_lock))
+		return -EINTR;
+	ret = simple_write_to_buffer(hello_devp->foo, PAGE_SIZE,
+					f_pos, buf, count);
+	mutex_unlock(&foo_lock);
+	if (!ret)
 		return -EIO;
 
 	return count;  /* success */

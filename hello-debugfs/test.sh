@@ -15,5 +15,5 @@ echo $?
 cat id-bad.txt >$DEV/id
 echo $?
 
-dd if=/etc/services of=$DEV/foo
+sudo dd if=/etc/services of=$DEV/foo
 grep ssh $DEV/foo
