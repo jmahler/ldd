@@ -2,16 +2,18 @@
 
 set -v
 
-ID="/sys/kernel/debug/hello/id"
+DEV="/sys/kernel/debug/hello"
 
-cat $ID >id.txt
+cat $DEV/id >id.txt
 
 cp id.txt id-bad.txt
 sed -i 's/a/X/g' id-bad.txt
 
-cat id.txt >$ID
+cat id.txt >$DEV/id
 echo $?
 
-cat id-bad.txt >$ID
+cat id-bad.txt >$DEV/id
 echo $?
 
+dd if=/etc/services of=$DEV/foo
+grep ssh $DEV/foo
