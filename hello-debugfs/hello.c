@@ -96,7 +96,7 @@ static int __init hello_init(void)
 	if (!hello_devp->d_jiffies)
 		goto err_debugfs_files;
 
-	dbg_foo = debugfs_create_file("foo", 0666,
+	dbg_foo = debugfs_create_file("foo", 0644,
 				hello_devp->root, NULL,
 				&hello_foo_fops);
 	if (!dbg_foo)
