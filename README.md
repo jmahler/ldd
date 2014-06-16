@@ -21,8 +21,8 @@ previous version.
 
   - hello-debugfs - read/write an id using debugfs files.
 
-  - misc_const - read/write an id using a misc driver (simplified char
-    driver).
+  - misc_id - read and test an id using a misc driver, which is a
+	simplified version of a char driver.
 
   - data_ - A data (ram) driver.
 
