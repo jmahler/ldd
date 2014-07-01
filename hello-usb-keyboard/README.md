@@ -2,7 +2,7 @@
 NAME
 ----
 
-hello-usb - Hello world kernel module for a usb keyboard
+hello-usb-keyboard - Hello world kernel module for a usb keyboard
 
 DESCRIPTION
 -----------

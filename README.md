@@ -17,7 +17,7 @@ previous version.
 
   - hello - "Hello, World!" message when driver loaded (insmod).
 
-  - hello-usb - "Hello, World!" message when usb keyboard plugged in.
+  - hello-usb-keyboard - "Hello, World!" message when usb keyboard plugged in.
 
   - debugfs_id - An id file using debugfs which can be read or written.
 	If the correct id is written the write succeeds, otherwise it fails.
