@@ -24,7 +24,7 @@ previous version.
 
   - hello-debugfs - read/write an id, read jiffies, and store foo.
 
-  - misc_id - An id file using a misc driver, which is a simplified
+  - id-misc - An id file using a misc driver, which is a simplified
 	version of a char driver.  If the correct id is written the write
 	succeeds, otherwise it fails.
 

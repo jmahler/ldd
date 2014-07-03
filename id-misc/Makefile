@@ -2,7 +2,7 @@
 ifneq ($(KERNELRELEASE),)
 
 ccflags-y += -DDEBUG
-obj-m := misc.o
+obj-m := id-misc.o
 
 else
 
