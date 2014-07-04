@@ -28,5 +28,5 @@ echo $?
 sudo dd if=/etc/services of=$DEV/foo
 grep ssh $DEV/foo
 
-rm -f id.txt id-bad.txt
+rm -f id.txt id-bad.txt id-bad2.txt
 
