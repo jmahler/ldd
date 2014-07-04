@@ -25,7 +25,7 @@ cat id-bad2.txt >$DEV/id
 echo $?
 
 # store some foo
-sudo dd if=/etc/services of=$DEV/foo
+sudo dd if=/etc/services of=$DEV/foo bs=4096 count=1
 grep ssh $DEV/foo
 
 rm -f id.txt id-bad.txt id-bad2.txt
