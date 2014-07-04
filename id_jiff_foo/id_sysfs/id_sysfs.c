@@ -14,22 +14,22 @@ const char id[] = "aeda58c25c67";
 static ssize_t id_sysfs_show(struct kobject *kobj, struct attribute *attr,
 					char *buf)
 {
-	return snprintf(buf, ID_LEN + 1, "%s", id);
+	return sprintf(buf, "%s\n", id);
 }
 
 /* return count if written id is correct, otherwise return -EINVAL */
 static ssize_t id_sysfs_store(struct kobject *kobj, struct attribute *attr,
 					const char *buf, size_t count)
 {
-	char kbuf[PAGE_SIZE/2];
+	/* an id with or without a new-line is OK */
 
-	if (count != ID_LEN)
+	if (count < ID_LEN || count > ID_LEN + 1)
 		return -EINVAL;
 
-	if (!sscanf(buf, "%s", kbuf))
+	if (count == ID_LEN + 1 && buf[ID_LEN] != '\n')
 		return -EINVAL;
 
-	if (strncmp(id, kbuf, ID_LEN))
+	if (strncmp(id, buf, ID_LEN))
 		return -EINVAL;
 
 	return count;  /* correct */
