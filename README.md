@@ -28,6 +28,8 @@ previous version.
 
   - jiff_debugfs - Read jiffies using debugfs.
 
+  - foo_debugfs - Read and write some foo to a buffer.
+
   - id_jiff_foo_debugfs - read/write an id, read jiffies, and store foo.
 
   - data_ - A data (ram) driver.
