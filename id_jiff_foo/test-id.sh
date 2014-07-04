@@ -5,6 +5,7 @@ if [ -z "$1" ]; then
 		  usage: $0 <device>
 		    <device> := "/dev/id" |
 		                "/sys/kernel/debug/id_debugfs/id" |
+		                "/sys/kernel/id_sysfs/id" |
 		                ...
 	EOF
 	exit 1
