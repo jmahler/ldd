@@ -26,6 +26,8 @@ previous version.
   - id_debugfs - An id file using debugfs which can be read or written.
 	If the correct id is written the write succeeds, otherwise it fails.
 
+  - jiff_debugfs - Read jiffies using debugfs.
+
   - id_jiff_foo_debugfs - read/write an id, read jiffies, and store foo.
 
   - data_ - A data (ram) driver.
