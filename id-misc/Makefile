@@ -1,7 +1,6 @@
 
 ifneq ($(KERNELRELEASE),)
 
-ccflags-y += -DDEBUG
 obj-m := id-misc.o
 
 else

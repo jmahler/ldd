@@ -9,29 +9,31 @@
 #define DEVICE_NAME "id"
 
 const char id[] = "aeda58c25c67";
+#define ID_LEN (ARRAY_SIZE(id) - 1)
 
 static ssize_t id_read(struct file *filp, char __user *buf,
 				size_t count, loff_t *f_pos)
 {
 	return simple_read_from_buffer(buf, count, f_pos, id,
-			ARRAY_SIZE(id) - 1);
+			ID_LEN);
 }
 
+/* return count if written id is correct, otherwise return -EINVAL */
 static ssize_t id_write(struct file *filp, const char __user *buf,
 				size_t count, loff_t *f_pos)
 {
-	char kbuf[ARRAY_SIZE(id) - 1];
+	char kbuf[ID_LEN];
 
-	if (count != ARRAY_SIZE(id) - 1)
+	if (count != ID_LEN)
 		return -EINVAL;
 
 	if (!simple_write_to_buffer(kbuf, ARRAY_SIZE(kbuf), f_pos, buf, count))
 		return -EINVAL;
 
-	if (strncmp(id, kbuf, ARRAY_SIZE(id) - 1))
+	if (strncmp(id, kbuf, ID_LEN))
 		return -EINVAL;
 
-	return count;  /* success */
+	return count;  /* correct */
 }
 
 static const struct file_operations id_fops = {

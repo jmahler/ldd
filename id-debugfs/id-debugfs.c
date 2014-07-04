@@ -2,35 +2,35 @@
 #include <linux/debugfs.h>
 #include <linux/init.h>
 #include <linux/module.h>
-#include <linux/mutex.h>
 #include <linux/slab.h>
 
-#define DEVICE_NAME "dbgid"
+#define MODULE_NAME "id-debugfs"
+#define DEVICE_NAME "id"
 
 const char id[] = "aeda58c25c67";
-#define ID_SIZE (ARRAY_SIZE(id) - 1)
+#define ID_LEN (ARRAY_SIZE(id) - 1)
 
 static struct dentry *root;
 
 static ssize_t id_read(struct file *filp, char __user *buf,
 					size_t count, loff_t *f_pos)
 {
-	return simple_read_from_buffer(buf, count, f_pos, id, ID_SIZE);
+	return simple_read_from_buffer(buf, count, f_pos, id, ID_LEN);
 }
 
-/* return -EINVAL if incorrect id is written, return count if correct */
+/* return count if written id is correct, otherwise return -EINVAL */
 static ssize_t id_write(struct file *filp, const char __user *buf,
 					size_t count, loff_t *f_pos)
 {
-	char kbuf[ID_SIZE];
+	char kbuf[ID_LEN];
 
-	if (count != ID_SIZE)
+	if (count != ID_LEN)
 		return -EINVAL;
 
 	if (!simple_write_to_buffer(kbuf, ARRAY_SIZE(kbuf), f_pos, buf, count))
 		return -EINVAL;
 
-	if (strncmp(id, kbuf, ID_SIZE))
+	if (strncmp(id, kbuf, ID_LEN))
 		return -EINVAL;
 
 	return count;  /* correct */
@@ -42,15 +42,15 @@ static const struct file_operations id_fops = {
 	.write = id_write,
 };
 
-static int __init hello_init(void)
+static int __init id_init(void)
 {
 	struct dentry *id;
 
-	root = debugfs_create_dir(DEVICE_NAME, NULL);
+	root = debugfs_create_dir(MODULE_NAME, NULL);
 	if (!root)
 		goto err_debugfs_root;
 
-	id = debugfs_create_file("id", 0666, root, NULL, &id_fops);
+	id = debugfs_create_file(DEVICE_NAME, 0666, root, NULL, &id_fops);
 	if (!id)
 		goto err_debugfs_files;
 
@@ -62,13 +62,13 @@ err_debugfs_root:
 	return -ENOMEM;
 }
 
-static void __exit hello_exit(void)
+static void __exit id_exit(void)
 {
 	debugfs_remove_recursive(root);
 }
 
-module_init(hello_init);
-module_exit(hello_exit);
+module_init(id_init);
+module_exit(id_exit);
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Jeremiah Mahler <jmmahler@gmail.com>");
