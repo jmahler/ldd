@@ -7,7 +7,7 @@
 
 static struct dentry *root;
 
-static int __init id_jiff_foo_debugfs_init(void)
+static int __init jiff_debugfs_init(void)
 {
 	struct dentry *jiff;
 
@@ -27,13 +27,13 @@ err_debugfs_root:
 	return -ENOMEM;
 }
 
-static void __exit id_jiff_foo_debugfs_exit(void)
+static void __exit jiff_debugfs_exit(void)
 {
 	debugfs_remove_recursive(root);
 }
 
-module_init(id_jiff_foo_debugfs_init);
-module_exit(id_jiff_foo_debugfs_exit);
+module_init(jiff_debugfs_init);
+module_exit(jiff_debugfs_exit);
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Jeremiah Mahler <jmmahler@gmail.com>");
