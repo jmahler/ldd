@@ -12,8 +12,7 @@ const char id[] = "aeda58c25c67";
 static ssize_t id_read(struct file *filp, char __user *buf,
 				size_t count, loff_t *f_pos)
 {
-	return simple_read_from_buffer(buf, count, f_pos, id,
-			ID_LEN);
+	return simple_read_from_buffer(buf, count, f_pos, id, ID_LEN);
 }
 
 /* return count if written id is correct, otherwise return -EINVAL */
