@@ -19,18 +19,15 @@ previous version.
 
   - hello-usb-keyboard - "Hello, World!" message when usb keyboard plugged in.
 
-  - id_misc - An id file using a misc driver, which is a simplified
-	version of a char driver.  If the correct id is written the write
-	succeeds, otherwise it fails.
+  - id_jiff_foo/
 
-  - id_debugfs - An id file using debugfs which can be read or written.
-	If the correct id is written the write succeeds, otherwise it fails.
+	- id_* - Read an id or write it to check if it is correct.
 
-  - jiff_debugfs - Read jiffies using debugfs.
+	- jiff_* - Read jiffies.
 
-  - foo_debugfs - Read and write some foo to a buffer.
+	- foo_* - Store some foo (a buffer of data).
 
-  - id_jiff_foo_debugfs - read/write an id, read jiffies, and store foo.
+	- id_jiff_foo_* - All three, id jiff and foo, in one driver.
 
   - data_ - A data (ram) driver.
 
