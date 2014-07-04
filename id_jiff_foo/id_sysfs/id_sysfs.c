@@ -35,12 +35,17 @@ static ssize_t id_sysfs_store(struct kobject *kobj, struct attribute *attr,
 	return count;  /* correct */
 }
 
+void id_sysfs_release(struct kobject *kobj)
+{
+}
+
 static const struct sysfs_ops id_sysfs_ops = {
 	.show  = id_sysfs_show,
 	.store = id_sysfs_store,
 };
 
 static struct kobj_type id_sysfs_ktype = {
+	.release   = id_sysfs_release,
 	.sysfs_ops = &id_sysfs_ops,
 };
 
