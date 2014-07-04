@@ -1,8 +1,7 @@
 
 ifneq ($(KERNELRELEASE),)
 
-ccflags-y += -DDEBUG
-obj-m := hello.o
+obj-m := id_jiff_foo_debugfs.o
 
 else
 

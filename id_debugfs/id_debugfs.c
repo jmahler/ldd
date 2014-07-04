@@ -5,7 +5,6 @@
 #include <linux/slab.h>
 
 #define MODULE_NAME "id_debugfs"
-#define DEVICE_NAME "id"
 
 const char id[] = "aeda58c25c67";
 #define ID_LEN (ARRAY_SIZE(id) - 1)
@@ -50,7 +49,7 @@ static int __init id_init(void)
 	if (!root)
 		goto err_debugfs_root;
 
-	id = debugfs_create_file(DEVICE_NAME, 0666, root, NULL, &id_fops);
+	id = debugfs_create_file("id", 0666, root, NULL, &id_fops);
 	if (!id)
 		goto err_debugfs_files;
 

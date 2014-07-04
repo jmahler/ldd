@@ -6,8 +6,6 @@
 #include <linux/miscdevice.h>
 #include <linux/uaccess.h>
 
-#define DEVICE_NAME "id"
-
 const char id[] = "aeda58c25c67";
 #define ID_LEN (ARRAY_SIZE(id) - 1)
 
@@ -43,7 +41,7 @@ static const struct file_operations id_fops = {
 };
 
 static struct miscdevice id_dev = {
-	.name  = DEVICE_NAME,
+	.name  = "id",
 	.minor = MISC_DYNAMIC_MINOR,
 	.fops  = &id_fops,
 };

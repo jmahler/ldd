@@ -8,8 +8,8 @@ This is a collection of Linux device driver examples that were collected
 while learning how to write drivers.  Some are unique to this project
 and some have been derived from examples given in books [[1]].
 
-In some examples, such as data_ and fifo_, the driver is built up in
-stages with each stage only adding a single new feature.  The `diff`
+In some examples, such as `data_*` and `fifo_*`, the driver is built up
+in stages with each stage only adding a single new feature.  The `diff`
 program can then be used to see what has changed compared to the
 previous version.
 
@@ -19,14 +19,14 @@ previous version.
 
   - hello-usb-keyboard - "Hello, World!" message when usb keyboard plugged in.
 
-  - id_debugfs - An id file using debugfs which can be read or written.
-	If the correct id is written the write succeeds, otherwise it fails.
-
-  - hello-debugfs - read/write an id, read jiffies, and store foo.
-
   - id_misc - An id file using a misc driver, which is a simplified
 	version of a char driver.  If the correct id is written the write
 	succeeds, otherwise it fails.
+
+  - id_debugfs - An id file using debugfs which can be read or written.
+	If the correct id is written the write succeeds, otherwise it fails.
+
+  - id_jiff_foo_debugfs - read/write an id, read jiffies, and store foo.
 
   - data_ - A data (ram) driver.
 
