@@ -1,8 +1,18 @@
 #!/bin/sh
 
-set -v
+if [ -z "$1" ]; then
+	cat <<-EOF
+		  usage: $0 <device>
+		    <device> := "/dev/id" |
+		                "/sys/kernel/debug/id_debugfs/id" |
+		                ...
+	EOF
+	exit 1
+fi
 
-DEV="/dev/id"
+DEV=$1
+
+set -v
 
 cat $DEV >id.txt
 
