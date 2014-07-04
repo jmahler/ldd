@@ -1,7 +1,7 @@
 
 ifneq ($(KERNELRELEASE),)
 
-obj-m := id-debugfs.o
+obj-m := id_misc.o
 
 else
 

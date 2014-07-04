@@ -19,12 +19,12 @@ previous version.
 
   - hello-usb-keyboard - "Hello, World!" message when usb keyboard plugged in.
 
-  - id-debugfs - An id file using debugfs which can be read or written.
+  - id_debugfs - An id file using debugfs which can be read or written.
 	If the correct id is written the write succeeds, otherwise it fails.
 
   - hello-debugfs - read/write an id, read jiffies, and store foo.
 
-  - id-misc - An id file using a misc driver, which is a simplified
+  - id_misc - An id file using a misc driver, which is a simplified
 	version of a char driver.  If the correct id is written the write
 	succeeds, otherwise it fails.
 

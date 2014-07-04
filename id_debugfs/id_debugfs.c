@@ -4,7 +4,7 @@
 #include <linux/module.h>
 #include <linux/slab.h>
 
-#define MODULE_NAME "id-debugfs"
+#define MODULE_NAME "id_debugfs"
 #define DEVICE_NAME "id"
 
 const char id[] = "aeda58c25c67";

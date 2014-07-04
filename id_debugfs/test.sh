@@ -2,7 +2,7 @@
 
 set -v
 
-DEV="/sys/kernel/debug/id-debugfs/id"
+DEV="/sys/kernel/debug/id_debugfs/id"
 
 cat $DEV >id.txt
 
