@@ -35,8 +35,18 @@ static ssize_t id_store(struct kobject *kobj, struct kobj_attribute *attr,
 static struct kobj_attribute id_attribute =
 	__ATTR(id, 0666, id_show, id_store);
 
+static ssize_t jiff_show(struct kobject *kobj, struct kobj_attribute *attr,
+					char *buf)
+{
+	return sprintf(buf, "%lu\n", jiffies);
+}
+
+static struct kobj_attribute jiff_attribute =
+	__ATTR(jiffies, 0444, jiff_show, NULL);
+
 static struct attribute *attrs[] = {
 	&id_attribute.attr,
+	&jiff_attribute.attr,
 	NULL
 };
 
