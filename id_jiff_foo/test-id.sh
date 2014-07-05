@@ -15,6 +15,8 @@ DEV=$1
 
 set -v
 
+echo $DEV
+
 cat $DEV >id.txt
 
 # correct id
