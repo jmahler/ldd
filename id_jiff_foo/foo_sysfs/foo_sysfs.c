@@ -2,39 +2,23 @@
 #include <linux/init.h>
 #include <linux/kobject.h>
 #include <linux/module.h>
-#include <linux/mutex.h>
 #include <linux/slab.h>
 #include <linux/string.h>
 #include <linux/sysfs.h>
 
 void *foo_data;
 #define FOO_DATA_SIZE PAGE_SIZE
-DEFINE_MUTEX(foo_lock);
 
 static ssize_t foo_show(struct kobject *kobj, struct kobj_attribute *attr,
 					char *buf)
 {
-	int ret;
-
-	if (mutex_lock_interruptible(&foo_lock))
-		return -EINTR;
-	ret = snprintf(buf, FOO_DATA_SIZE, "%s", (char *) foo_data);
-	mutex_unlock(&foo_lock);
-
-	return ret;
+	return snprintf(buf, FOO_DATA_SIZE, "%s", (char *) foo_data);
 }
 
 static ssize_t foo_store(struct kobject *kobj, struct kobj_attribute *attr,
 					const char *buf, size_t count)
 {
-	int ret;
-
-	if (mutex_lock_interruptible(&foo_lock))
-		return -EINTR;
-	ret = snprintf(foo_data, FOO_DATA_SIZE, "%s", buf);
-	mutex_unlock(&foo_lock);
-
-	return ret;
+	return snprintf(foo_data, FOO_DATA_SIZE, "%s", buf);
 }
 
 static struct kobj_attribute foo_attribute =
