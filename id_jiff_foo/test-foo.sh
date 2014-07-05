@@ -3,7 +3,9 @@
 if [ -z "$1" ]; then
 	cat <<-EOF
 		  usage: $0 <device>
-		    <device> := "/sys/kernel/debug/foo_debugfs/foo" | ...
+		    <device> := "/sys/kernel/debug/foo_debugfs/foo" |
+		                "/sys/kernel/foo_sysfs/foo" |
+		                ...
 	EOF
 	exit 1
 fi
