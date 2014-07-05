@@ -27,16 +27,21 @@ struct kobject *kobj;
 
 static int __init jiff_sysfs_init(void)
 {
-	int ret;
+	int ret = -ENOMEM;  /* default return value */
 
 	kobj = kobject_create_and_add("jiff_sysfs", kernel_kobj);
 	if (!kobj)
-		return -ENOMEM;
+		goto err_kobj_create;
 
 	ret = sysfs_create_group(kobj, &attr_group);
 	if (ret)
-		kobject_put(kobj);
+		goto err_sysfs_group;
 
+	return 0;
+
+err_sysfs_group:
+	kobject_put(kobj);
+err_kobj_create:
 	return ret;
 }
 
