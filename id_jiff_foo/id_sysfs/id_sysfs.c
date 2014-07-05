@@ -1,9 +1,9 @@
 
+#include <linux/init.h>
 #include <linux/kobject.h>
+#include <linux/module.h>
 #include <linux/string.h>
 #include <linux/sysfs.h>
-#include <linux/module.h>
-#include <linux/init.h>
 
 const char id[] = "aeda58c25c67";
 #define ID_LEN (ARRAY_SIZE(id) - 1)
