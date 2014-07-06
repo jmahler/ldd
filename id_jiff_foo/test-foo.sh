@@ -12,7 +12,9 @@ fi
 
 DEV=$1
 
-set -vx
+set -v
+
+echo $DEV
 
 # store services in foo
 sudo dd if=/etc/services of=$DEV bs=4096 count=1
