@@ -54,6 +54,8 @@ previous version.
 
 	- fifo_sysfs - Add Sysfs support so state of FIFOs can be read.
 
+  - linked_list - Using linked list operations (linux/list.h).
+
 ## References
 
   [1] [Linux Device Drivers][1]
