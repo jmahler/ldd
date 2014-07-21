@@ -41,13 +41,11 @@ int identity_create(char *name, int id)
 
 struct identity *identity_find(int id)
 {
-	struct list_head *pos;
-	struct identity *tmp;
+	struct identity *pos;
 
-	list_for_each(pos, &identities) {
-		tmp = list_entry(pos, struct identity, list);
-		if (tmp->id == id)
-			return tmp;
+	list_for_each_entry(pos, &identities, list) {
+		if (pos->id == id)
+			return pos;
 	}
 
 	return NULL;
@@ -67,13 +65,11 @@ void identity_destroy(int id)
 
 void identity_destroy_all(void)
 {
-	struct identity *tmp;
-	struct list_head *pos, *q;
+	struct identity *pos, *n;
 
-	list_for_each_safe(pos, q, &identities) {
-		tmp = list_entry(pos, struct identity, list);
-		list_del(pos);
-		kfree(tmp);
+	list_for_each_entry_safe(pos, n, &identities, list) {
+		list_del(&pos->list);
+		kfree(pos);
 	}
 }
 
