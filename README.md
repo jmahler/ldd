@@ -56,6 +56,8 @@ previous version.
 
   - linked_list - Using linked list operations (linux/list.h).
 
+  - linked_list_cache - linked_list using kmem_cache operations.
+
 ## References
 
   [1] [Linux Device Drivers][1]
