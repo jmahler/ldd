@@ -15,6 +15,8 @@ struct identity {
 
 LIST_HEAD(identities);
 
+static struct kmem_cache *identity_cache;
+
 int identity_create(char *name, int id)
 {
 	struct identity *tmp;
@@ -25,7 +27,7 @@ int identity_create(char *name, int id)
 	if (len >= sizeof(tmp->name))
 		return -ENOMEM;
 
-	tmp = kmalloc(sizeof(struct identity), GFP_KERNEL);
+	tmp = kmem_cache_alloc(identity_cache, GFP_KERNEL);
 	if (NULL == tmp)
 		return -ENOMEM;
 
@@ -60,7 +62,7 @@ void identity_destroy(int id)
 		return;
 
 	list_del(&found->list);
-	kfree(found);
+	kmem_cache_free(identity_cache, found);
 }
 
 void identity_destroy_all(void)
@@ -69,13 +71,19 @@ void identity_destroy_all(void)
 
 	list_for_each_entry_safe(pos, n, &identities, list) {
 		list_del(&pos->list);
-		kfree(pos);
+		kmem_cache_free(identity_cache, pos);
 	}
 }
 
 static int __init linked_list_init(void)
 {
 	struct identity *temp;
+
+	identity_cache = kmem_cache_create("identity_cache",
+				sizeof(struct identity),
+				0, 0, NULL);
+	if (!identity_cache)
+		goto err_cache_create;
 
 	if (identity_create("Alice", 1))
 		goto err_identity_create;
@@ -103,12 +111,15 @@ static int __init linked_list_init(void)
 
 err_identity_create:
 	identity_destroy_all();
+	kmem_cache_destroy(identity_cache);
+err_cache_create:
 	return -ENOMEM;
 }
 
 static void __exit linked_list_exit(void)
 {
 	identity_destroy_all();
+	kmem_cache_destroy(identity_cache);
 }
 
 module_init(linked_list_init);
