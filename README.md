@@ -58,6 +58,9 @@ previous version.
 
   - linked_list_cache - linked_list using kmem_cache operations.
 
+  - nf_logid - Netfilter driver which monitors all IPv4 network
+	traffic and prints a message when the pattern is found.
+
 ## References
 
   [1] [Linux Device Drivers][1]
