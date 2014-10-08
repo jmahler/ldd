@@ -20,15 +20,14 @@ static unsigned char in_buf(const char *ptrn, const unsigned int ptrn_len,
 
 	/* look for the pattern */
 	for (i = 0; i < ptrn_len; i++) {
-		if (*(data + i) != *(ptrn + i)) {
+		if (*(data + i) != *(ptrn + i))
 			break;
-		}
 	}
 	if (i == ptrn_len)
 		return 1;  /* found a match */
 
 	/* continue searching */
-	return (in_buf(ptrn, ptrn_len, data + 1, data_len - 1));
+	return in_buf(ptrn, ptrn_len, data + 1, data_len - 1);
 }
 
 static unsigned int logid_fn(const struct nf_hook_ops *ops,
