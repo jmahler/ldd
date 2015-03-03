@@ -121,7 +121,7 @@ static ssize_t read_offset_store(struct device *dev,
 	return 0;  /* cannot store anything */
 }
 
-static DEVICE_ATTR(read_offset, 0666, read_offset_show, read_offset_store);
+static DEVICE_ATTR(read_offset, 0664, read_offset_show, read_offset_store);
 
 static ssize_t write_offset_show(struct device *dev,
 				struct device_attribute *attr, char *buf)
@@ -138,7 +138,7 @@ static ssize_t write_offset_store(struct device *dev,
 	return 0;  /* cannot store anything */
 }
 
-static DEVICE_ATTR(write_offset, 0666, write_offset_show, write_offset_store);
+static DEVICE_ATTR(write_offset, 0664, write_offset_show, write_offset_store);
 
 
 static int __init fifo_init(void)
