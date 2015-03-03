@@ -20,6 +20,11 @@ int main(int argc, char* argv[])
 	int devfd;
 	ssize_t nr;
 
+	if (argc < 2) {
+		fprintf(stderr, "usage: %s <int1> [<int2> ...]\n", argv[0]);
+		return EXIT_FAILURE;
+	}
+
 	devfd = open(DEVFILE, O_WRONLY);
 	if (-1 == n) {
 		perror("open()");
