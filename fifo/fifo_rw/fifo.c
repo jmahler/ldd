@@ -7,7 +7,7 @@
 #include <linux/uaccess.h>
 
 #define DEVICE_NAME "fifo"
-#define MAX_DATA 3
+#define MAX_DATA 8
 
 static dev_t fifo_major;
 struct class *fifo_class;
