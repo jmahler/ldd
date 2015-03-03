@@ -43,7 +43,7 @@ previous version.
 
   - null - /dev/null driver.
 
-  - fifo_ - A first in first out (FIFO) driver.
+  - fifo - A first in first out (FIFO) driver.
 
 	- fifo_rw - Read/write FIFO operations.
 
