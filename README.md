@@ -61,6 +61,8 @@ previous version.
   - nf_logid - Netfilter driver which monitors all IPv4 network
 	traffic and prints a message when the pattern is found.
 
+  - faulty - Create a segfault during a read or write.
+
 ## References
 
   [1] [Linux Device Drivers][1]
