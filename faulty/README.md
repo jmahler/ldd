@@ -188,6 +188,7 @@ The exact line where the fault occurred in the C source code has been found.
 REFERENCES
 ----------
 
+  [1] [http://www.opensourceforu.com/2011/01/understanding-a-kernel-oops/][1]
   [1]: http://www.opensourceforu.com/2011/01/understanding-a-kernel-oops/
 
 AUTHOR
