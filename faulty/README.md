@@ -54,6 +54,11 @@ available, but it is an interesting characteristic nonetheless.
 There is much more information in the back trace but in this case this
 would likely be enough to find the fault.
 
+REFERENCES
+----------
+
+  [1]: http://www.opensourceforu.com/2011/01/understanding-a-kernel-oops/
+
 AUTHOR
 ------
 Jeremiah Mahler <jmmahler@gmail.com><br>
