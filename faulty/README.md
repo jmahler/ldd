@@ -131,6 +131,60 @@ Be sure to include the `*` in the command.
 This points directly to line 69, which was the call which created
 the buffer overflow.
 
+Write Fault
+-----------
+
+First, build and load the fault module.
+
+    make
+    sudo insmod faulty.ko
+
+Then write to the faulty device.
+
+    sudo dd if=/dev/zero of=/dev/faulty count=20
+
+From the backtrace, look at the RIP line.
+
+    ...
+    Mar 11 12:39:15 frost kernel: RIP  [<ffffffffa017b025>] faulty_write+0x5/0x20 [faulty]
+    ...
+
+This already narrowed it down to the right module and function.
+Next, find the address of the `.text` section then use `gdb` to
+interpret these values and find the exact location in the C source code.
+
+    cat /sys/module/faulty/sections/.text
+    0xffffffffa00f2000
+
+    sudo gdb faulty.ko
+    (gdb) add-symbol-file faulty.o 0xffffffffa00f2000
+    add symbol table from file "faulty.o" at
+        .text_addr = 0xffffffffa00f2000
+    (y or n) y
+    Reading symbols from faulty.o...done.
+    (gdb) disassemble faulty_write
+    Dump of assembler code for function faulty_write:
+       0x0000000000000050 <+0>:     callq  0x55 <faulty_write+5>
+       0x0000000000000055 <+5>:     movl   $0x0,0x0
+       0x0000000000000060 <+16>:    xor    %eax,%eax
+       0x0000000000000062 <+18>:    retq
+    End of assembler dump.
+    (gdb) list *0x0000000000000055
+    0x55 is in faulty_write (/home/jeri/ldd/faulty/faulty.c:85).
+    80
+    81	static ssize_t faulty_write(struct file *filp, const char __user *buf,
+    82                                          size_t count, loff_t *f_pos)
+    83	{
+    84          /* Create a fault by trying to de-reference a NULL pointer */
+    85          *(int *)0 = 0;
+    86          return 0;
+    87	}
+    88
+    89	static int faulty_release(struct inode *inode, struct file *filp)
+    (gdb)
+
+The exact line where the fault occurred in the C source code has been found.
+
 REFERENCES
 ----------
 
