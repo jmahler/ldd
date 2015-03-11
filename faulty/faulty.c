@@ -66,7 +66,7 @@ static ssize_t faulty_read(struct file *filp, char __user *buf,
 	char stack_buf[4];
 
 	/* Create a buffer overflow fault */
-	memset(stack_buf, 0xff, 20);
+	memset(stack_buf, 0xab, 20);
 
 	if (count > 4)
 		count = 4;
