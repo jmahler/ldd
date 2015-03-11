@@ -16,7 +16,7 @@ Be sure to have `CONFIG_KALLSYSM` enabled in the kernel.  Otherwise
 the backtrace will be even more incomprehensible.
 
 Read Fault
-==========
+----------
 
 First, build and load the fault module.
 
