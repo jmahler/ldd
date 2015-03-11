@@ -64,7 +64,7 @@ Refer again to the RIP line (below) in the back trace.
 
 The value `+0x53/0x54` indicates the symbol location and offset.  But these
 values are relative to assembler code, not C code, so `gdb` must be used
-to translate these values.
+to translate them.
 
 First, start gdb with the faulty module.
 
