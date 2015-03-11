@@ -51,8 +51,85 @@ available, but it is an interesting characteristic nonetheless.
     /* Create a buffer overflow fault */
     memset(stack_buf, 0xab, 20);
     
-There is much more information in the back trace but in this case this
-would likely be enough to find the fault.
+At this point the function inside the module where the fault occurred is known.
+But the exact function within this is not known.  Using more information
+from the backtrace, along with `gdb`, the fault location can be further narrowed
+down.
+
+Refer again to the RIP line (below) in the back trace.
+
+    ...
+    Mar 11 00:29:59 frost kernel: RIP  [<ffffffffa00b90a3>] faulty_read+0x53/0x54 [faulty]
+    ...
+
+The value `+0x53/0x54` indicates the symbol location and offset.  But these
+values are relative to assembler code, not C code, so `gdb` must be used
+to translate these values.
+
+First, start gdb with the faulty module.
+
+    sudo gdb faulty.ko
+    (gdb)
+
+Before adding the symbol file, the location of the `.text` section in the
+faulty module must be determined.  This can be found by reading its sysfs
+file.
+
+    cat /sys/module/faulty/sections/.text 
+    0xffffffffa0176000
+
+Now add the symbol file from gdb.
+
+    (gdb) add-symbol-file faulty.o 0xffffffffa0176000
+
+Disassemble the `faulty_read` function to see locations referred to by
+`+0x53/0x54` in the RIP line.
+
+    (gdb) disassemble faulty_read
+    Dump of assembler code for function faulty_read:
+       0x0000000000000080 <+0>:	callq  0x85 <faulty_read+5>
+       0x0000000000000085 <+5>:	push   %rbx
+       0x0000000000000086 <+6>:	mov    $0x4,%ebx
+       0x000000000000008b <+11>:	mov    %rsi,%rdi
+       0x000000000000008e <+14>:	movabs $0xabababababababab,%rax
+       0x0000000000000098 <+24>:	sub    $0x10,%rsp
+       0x000000000000009c <+28>:	cmp    $0x4,%rdx
+       0x00000000000000a0 <+32>:	cmovbe %rdx,%rbx
+       0x00000000000000a4 <+36>:	lea    0xc(%rsp),%rsi
+       0x00000000000000a9 <+41>:	mov    %rax,0xc(%rsp)
+       0x00000000000000ae <+46>:	mov    %ebx,%edx
+       0x00000000000000b0 <+48>:	mov    %rax,0x14(%rsp)
+       0x00000000000000b5 <+53>:	movl   $0xabababab,0x1c(%rsp)
+       0x00000000000000bd <+61>:	callq  0xc2 <faulty_read+66>
+       0x00000000000000c2 <+66>:	test   %eax,%eax
+       0x00000000000000c4 <+68>:	movslq %eax,%rdx
+       0x00000000000000c7 <+71>:	mov    %rbx,%rax
+       0x00000000000000ca <+74>:	cmovne %rdx,%rax
+       0x00000000000000ce <+78>:	add    $0x10,%rsp
+       0x00000000000000d2 <+82>:	pop    %rbx
+       0x00000000000000d3 <+83>:	retq   
+    End of assembler dump
+
+But this still doesn't indicate which line in the C source is at fault.
+To get a listing, use the `list` command with the address at `+0x53`.
+Be sure to include the `*` in the command.
+
+    (gdb) list *0x00000000000000b5
+    0xb5 is in faulty_read (/home/jeri/ldd/faulty/faulty.c:69).
+    64	{
+    65		int ret;
+    66		char stack_buf[4];
+    67	
+    68		/* Create a buffer overflow fault */
+    69		memset(stack_buf, 0xab, 20);
+    70	
+    71		if (count > 4)
+    72			count = 4;
+    73	
+    (gdb)
+
+This points directly to line 69, which was the call which created
+the buffer overflow.
 
 REFERENCES
 ----------
