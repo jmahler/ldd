@@ -29,4 +29,3 @@ module_exit(hello_exit);
 
 MODULE_AUTHOR("Jeremiah Mahler <jmmahler@gmail.com>");
 MODULE_LICENSE("GPL");
-

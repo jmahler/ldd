@@ -127,4 +127,3 @@ module_exit(id_jiff_foo_debugfs_exit);
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Jeremiah Mahler <jmmahler@gmail.com>");
-

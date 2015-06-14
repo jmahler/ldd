@@ -18,4 +18,3 @@ cat $DEV
 sleep 1;
 cat $DEV
 # (should be different)
-

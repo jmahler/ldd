@@ -234,4 +234,3 @@ module_exit(fifo_exit);
 
 MODULE_AUTHOR("Jeremiah Mahler <jmmahler@gmail.com>");
 MODULE_LICENSE("GPL");
-

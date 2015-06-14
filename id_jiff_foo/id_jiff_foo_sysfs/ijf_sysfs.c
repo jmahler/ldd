@@ -113,4 +113,3 @@ module_exit(ijf_sysfs_exit);
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Jeremiah Mahler <jmmahler@gmail.com>");
-

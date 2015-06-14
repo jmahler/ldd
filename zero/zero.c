@@ -122,4 +122,3 @@ module_exit(zero_exit);
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Jeremiah Mahler <jmmahler@gmail.com>");
-
