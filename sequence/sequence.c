@@ -82,7 +82,7 @@ static const struct file_operations sequence_fops = {
 	.open		= sequence_open,
 	.read		= seq_read,
 	.release	= seq_release,
-	.llseek		= no_llseek,
+	.llseek		= seq_lseek,
 };
 
 static int __init sequence_init(void)
