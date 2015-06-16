@@ -39,25 +39,19 @@
 #include <linux/module.h>
 #include <linux/debugfs.h>
 #include <linux/seq_file.h>
-#include <linux/slab.h>
 
 static struct dentry *debugfs_file;
 
 static void *sequence_start(struct seq_file *s, loff_t *pos)
 {
-	loff_t *spos = kmalloc(sizeof(loff_t), GFP_KERNEL);
-	if (!spos)
-		return NULL;
-	*spos = *pos;
-	return spos;
+	return (void *) pos;
 }
 
 static void *sequence_next(struct seq_file *s, void *v, loff_t *pos)
 {
-	loff_t *spos = (loff_t *) v;
-	*pos = ++(*spos);
+	++(*pos);
 
-	return spos;
+	return (void *) pos;
 }
 
 static int sequence_show(struct seq_file *s, void *v)
@@ -70,7 +64,6 @@ static int sequence_show(struct seq_file *s, void *v)
 
 static void sequence_stop(struct seq_file *s, void *v)
 {
-	kfree(v);
 }
 
 static struct seq_operations sequence_sops = {
