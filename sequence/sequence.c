@@ -94,7 +94,7 @@ static const struct file_operations sequence_fops = {
 
 static int __init sequence_init(void)
 {
-	debugfs_file = debugfs_create_file("sequence", 0444, NULL, NULL,
+	debugfs_file = debugfs_create_file("sequence", 0400, NULL, NULL,
 						&sequence_fops);
 	return 0;
 }
