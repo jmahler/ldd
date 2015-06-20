@@ -70,6 +70,8 @@ previous version.
   - primes - Read a sequence of prime numbers from a debugfs file.
              Another example of how to use seq_file.
 
+  - rickroll - Rickroll .mp3 files by hijacking the open() system call.
+
 ## References
 
   [1] [Linux Device Drivers][1]
