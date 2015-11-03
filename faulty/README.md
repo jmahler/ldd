@@ -9,7 +9,7 @@ DESCRIPTION
 
 This module can be used to create a segfault which will generate a
 backtrace in the logs.  This can be useful when learning how to
-understand backtraces.  Since it is know where the fault is in the code,
+understand backtraces.  Since it is known where the fault is in the code,
 the task is to determine how the backtrace points to this location.
 
 Be sure to have `CONFIG_KALLSYSM` enabled in the kernel.  Otherwise
