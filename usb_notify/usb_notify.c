@@ -7,20 +7,18 @@
 static int usb_notify_subscriber(struct notifier_block *self,
 				unsigned long action, void *unused)
 {
-	pr_info("%s\n", __func__);
-
 	switch (action) {
 	case USB_DEVICE_ADD:
-		pr_info("  USB_DEVICE_ADD\n");
+		pr_info("USB_DEVICE_ADD\n");
 		break;
 	case USB_DEVICE_REMOVE:
-		pr_info("  USB_DEVICE_REMOVE\n");
+		pr_info("USB_DEVICE_REMOVE\n");
 		break;
 	case USB_BUS_ADD:
-		pr_info("  USB_BUS_ADD\n");
+		pr_info("USB_BUS_ADD\n");
 		break;
 	case USB_BUS_REMOVE:
-		pr_info("  USB_BUS_REMOVE\n");
+		pr_info("USB_BUS_REMOVE\n");
 		break;
 	}
 

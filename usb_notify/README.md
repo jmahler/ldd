@@ -21,13 +21,11 @@ notification occurs.
       ...
     (plug in some usb device)
       ...
-      Nov 20 11:29:36 newt kernel: usb_notify_subscriber
-      Nov 20 11:29:36 newt kernel:   USB_DEVICE_ADD
+      Nov 20 11:29:36 newt kernel: USB_DEVICE_ADD
       ...
     (remove the usb device)
       ...
-      Nov 20 11:30:13 newt kernel: usb_notify_subscriber
-      Nov 20 11:30:13 newt kernel:   USB_DEVICE_REMOVE
+      Nov 20 11:30:13 newt kernel: USB_DEVICE_REMOVE
       ...
     (remove a bus by unbinding it)
     ~/ldd/usb_notify# echo "0000:00:1d.0" > /sys/bus/pci/drivers/ehci-pci/unbind 
@@ -35,19 +33,15 @@ notification occurs.
       Nov 20 11:32:39 newt kernel: ehci-pci 0000:00:1d.0: remove, state 4
       Nov 20 11:32:39 newt kernel: usb usb1: USB disconnect, device number 1
       Nov 20 11:32:39 newt kernel: usb 1-1: USB disconnect, device number 2
-      Nov 20 11:32:39 newt kernel: usb_notify_subscriber
-      Nov 20 11:32:39 newt kernel:   USB_DEVICE_REMOVE
-      Nov 20 11:32:39 newt kernel: usb_notify_subscriber
-      Nov 20 11:32:39 newt kernel:   USB_DEVICE_REMOVE
+      Nov 20 11:32:39 newt kernel: USB_DEVICE_REMOVE
+      Nov 20 11:32:39 newt kernel: USB_DEVICE_REMOVE
       Nov 20 11:32:39 newt kernel: ehci-pci 0000:00:1d.0: USB bus 1 deregistered
-      Nov 20 11:32:39 newt kernel: usb_notify_subscriber
-      Nov 20 11:32:39 newt kernel:   USB_BUS_REMOVE
+      Nov 20 11:32:39 newt kernel: USB_BUS_REMOVE
       ...
     (re-add the bus by binding it)
     ~/ldd/usb_notify# echo "0000:00:1d.0" > /sys/bus/pci/drivers/ehci-pci/bind 
       ...
-      Nov 20 11:38:56 newt kernel: usb_notify_subscriber
-      Nov 20 11:38:56 newt kernel:   USB_BUSS_ADD
+      Nov 20 11:38:56 newt kernel: USB_BUSS_ADD
       Nov 20 11:38:56 newt kernel: ehci-pci 0000:00:1d.0: new USB bus
       registered, assigned bus number 1
       Nov 20 11:38:56 newt kernel: ehci-pci 0000:00:1d.0: debug port 2
