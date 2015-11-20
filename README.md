@@ -72,6 +72,8 @@ previous version.
 
   - rickroll - Rickroll .mp3 files by hijacking the open() system call.
 
+  - usb_notify - Subscribe to the USB notifier chain and display events.
+
 ## References
 
   [1] [Linux Device Drivers][1]
