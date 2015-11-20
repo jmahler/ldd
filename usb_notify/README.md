@@ -17,38 +17,39 @@ notification occurs.
     ~/ldd/usb_notify$ sudo su
     ~/ldd/usb_notify# insmod usb_notify.ko
       ...
-      Nov 20 11:28:52 newt kernel: Starting USB Notify Subscriber
+      Nov 20 15:10:00 newt kernel: Starting USB Notify Subscriber
       ...
     (plug in some usb device)
       ...
-      Nov 20 11:29:36 newt kernel: USB_DEVICE_ADD
+      Nov 20 15:10:07 newt kernel: usb 2-5: USB_DEVICE_ADD
       ...
     (remove the usb device)
       ...
-      Nov 20 11:30:13 newt kernel: USB_DEVICE_REMOVE
+      Nov 20 15:10:12 newt kernel: usb 2-5: USB disconnect, device number 6
+      Nov 20 15:10:12 newt kernel: usb 2-5: USB_DEVICE_REMOVE
       ...
     (remove a bus by unbinding it)
     ~/ldd/usb_notify# echo "0000:00:1d.0" > /sys/bus/pci/drivers/ehci-pci/unbind 
       ...
-      Nov 20 11:32:39 newt kernel: ehci-pci 0000:00:1d.0: remove, state 4
-      Nov 20 11:32:39 newt kernel: usb usb1: USB disconnect, device number 1
-      Nov 20 11:32:39 newt kernel: usb 1-1: USB disconnect, device number 2
-      Nov 20 11:32:39 newt kernel: USB_DEVICE_REMOVE
-      Nov 20 11:32:39 newt kernel: USB_DEVICE_REMOVE
-      Nov 20 11:32:39 newt kernel: ehci-pci 0000:00:1d.0: USB bus 1 deregistered
-      Nov 20 11:32:39 newt kernel: USB_BUS_REMOVE
+      Nov 20 15:10:18 newt kernel: ehci-pci 0000:00:1d.0: remove, state 4
+      Nov 20 15:10:18 newt kernel: usb usb1: USB disconnect, device number 1
+      Nov 20 15:10:18 newt kernel: usb 1-1: USB disconnect, device number 2
+      Nov 20 15:10:18 newt kernel: usb 1-1: USB_DEVICE_REMOVE
+      Nov 20 15:10:18 newt kernel: usb usb1: USB_DEVICE_REMOVE
+      Nov 20 15:10:18 newt kernel: ehci-pci 0000:00:1d.0: USB bus 1 deregistered
+      Nov 20 15:10:18 newt kernel: ehci-pci 0000:00:1d.0: USB_BUS_REMOVE, 1
       ...
     (re-add the bus by binding it)
     ~/ldd/usb_notify# echo "0000:00:1d.0" > /sys/bus/pci/drivers/ehci-pci/bind 
       ...
-      Nov 20 11:38:56 newt kernel: USB_BUSS_ADD
-      Nov 20 11:38:56 newt kernel: ehci-pci 0000:00:1d.0: new USB bus
-      registered, assigned bus number 1
-      Nov 20 11:38:56 newt kernel: ehci-pci 0000:00:1d.0: debug port 2
-      Nov 20 11:38:56 newt kernel: ehci-pci 0000:00:1d.0: cache line size of
-      64 is not supported
+      Nov 20 15:10:25 newt kernel: ehci-pci 0000:00:1d.0: EHCI Host Controller
+      Nov 20 15:10:25 newt kernel: ehci-pci 0000:00:1d.0: USB_BUS_ADD, 1
+      Nov 20 15:10:25 newt kernel: ehci-pci 0000:00:1d.0: new USB bus registered, assigned bus number 1
       ...
-    ~/ldd/usb_notify# rmmod usb_notify.ko
+    ~/ldd/usb_notify# rmmod usb_notify
+      ...
+      Nov 20 15:10:31 newt kernel: Stopping USB Notify Subscriber
+      ...
 
 REFERENCES
 ----------
