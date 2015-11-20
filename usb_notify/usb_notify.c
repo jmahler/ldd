@@ -5,7 +5,7 @@
 #include <linux/usb.h>
 
 static int usb_notify_subscriber(struct notifier_block *self,
-				unsigned long action, void *dev)
+				unsigned long action, void *unused)
 {
 	pr_info("%s\n", __func__);
 
