@@ -43,7 +43,7 @@ Now `modprobe` can be used.
 
 The third method supports all the previous methods as well making it
 possible for the kernel to auto load the module.  In this case the module
-is place in the tree and then the whole kernel is re-compiled.  The
+is placed in the tree and then the whole kernel is re-compiled.  The
 location `drivers/usb/misc` is a good place.
 
     # cp hello.c linux/drivers/usb/misc/
