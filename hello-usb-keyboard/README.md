@@ -49,7 +49,8 @@ location `drivers/usb/misc` is a good place.
     # cp hello.c linux/drivers/usb/misc/
 
 An entry will have to be added to the makefile for this new source file.
-Also, the -DDEBUG option must be added in order for `pr_debug()` to work.
+Also, the -DDEBUG option must be added in order for `pr_debug()` to
+produce without having to enable it through Dynamic Debug.
 
     diff --git a/drivers/usb/misc/Makefile b/drivers/usb/misc/Makefile
     index e748fd5..4c81ce7 100644
