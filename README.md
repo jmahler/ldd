@@ -17,6 +17,8 @@ previous version.
 
   - hello - "Hello, World!" message when driver loaded (insmod).
 
+  - tiny - The tiniest possible module.
+
   - hello-usb-keyboard - "Hello, World!" message when usb keyboard plugged in.
 
   - id_jiff_foo/
